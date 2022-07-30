@@ -1,7 +1,9 @@
 package goband
 
+import "DaisyClubHouse/goband/player"
+
 type Room struct {
 	ID     string
-	Owner  *PlayerClient
-	Player *PlayerClient
+	Owner  *player.Client
+	Player *player.Client
 }
