@@ -8,10 +8,38 @@ import (
 
 type PlayerClient struct {
 	conn *websocket.Conn
+
+	send chan []byte
+	cb   *ChessBoard
 }
 
-func NewPlayerClient(conn *websocket.Conn) *PlayerClient {
-	return &PlayerClient{conn: conn}
+func NewPlayerClient(conn *websocket.Conn, cb *ChessBoard) *PlayerClient {
+	return &PlayerClient{
+		conn: conn,
+		send: make(chan []byte),
+		cb:   cb,
+	}
+}
+
+func (client *PlayerClient) ReadPump() {
+	defer func() {
+		client.cb.ClientDisconnected(client)
+		client.conn.Close()
+	}()
+	for {
+		mt, message, err := client.conn.ReadMessage()
+		if err != nil {
+			log.Printf("read message error: %v", err)
+			break
+		}
+
+		log.Printf("[recv from %s]: (t: %d, lens:%d) - %s",
+			client.conn.RemoteAddr(), mt, len(message), message)
+	}
+}
+
+func (client *PlayerClient) WritePump() {
+
 }
 
 func (client *PlayerClient) run() {
@@ -28,4 +56,8 @@ func (client *PlayerClient) run() {
 			break
 		}
 	}
+}
+
+func (client *PlayerClient) SendRawMessage(raw []byte) {
+	client.send <- raw
 }

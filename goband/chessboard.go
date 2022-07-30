@@ -1,6 +1,10 @@
 package goband
 
-import "github.com/gorilla/websocket"
+import (
+	"log"
+
+	"github.com/gorilla/websocket"
+)
 
 type ChessBoard struct {
 	clients []*PlayerClient
@@ -11,8 +15,19 @@ func NewChessBoard() *ChessBoard {
 }
 
 func (b *ChessBoard) ClientConnected(conn *websocket.Conn) {
-	client := NewPlayerClient(conn)
-	b.clients = append(b.clients, client)
+	client := NewPlayerClient(conn, b)
+	client.WritePump()
+	client.ReadPump()
 
-	client.run()
+	b.clients = append(b.clients, client)
+}
+
+func (b *ChessBoard) ClientDisconnected(client *PlayerClient) {
+	for i, c := range b.clients {
+		if c == client {
+			log.Printf("客户端[%s]断开连接\n", client.conn.RemoteAddr())
+			b.clients = append(b.clients[:i], b.clients[i+1:]...)
+			break
+		}
+	}
 }
