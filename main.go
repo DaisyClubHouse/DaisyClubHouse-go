@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"DaisyClubHouse/goband"
 	"github.com/gorilla/websocket"
 )
 
@@ -15,7 +16,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func wsHandler(board *goband.ChessBoard, w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatalf("upgrade error: %v", err)
@@ -23,23 +24,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Fatalf("read error: %v", err)
-			break
-		}
+	log.Printf("%s connected\n", c.RemoteAddr())
 
-		log.Printf("recv: %s", message)
-		if err = c.WriteMessage(mt, message); err != nil {
-			log.Fatalf("write error: %v", err)
-			break
-		}
-	}
+	board.ClientConnected(c)
+
 }
 func main() {
 	const address = "127.0.0.1:9000"
-	http.HandleFunc("/", handler)
+
+	chessboard := goband.NewChessBoard()
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		wsHandler(chessboard, w, r)
+	})
 
 	log.Printf("listening on %s\n", address)
 	if err := http.ListenAndServe(address, nil); err != nil {
