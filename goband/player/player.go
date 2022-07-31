@@ -1,25 +1,36 @@
 package player
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 	"time"
 
+	"DaisyClubHouse/goband/event"
+	"DaisyClubHouse/goband/msg"
+	"DaisyClubHouse/utils"
+	pb "github.com/DaisyClubHouse/proto/generated"
+	"github.com/asaskevich/EventBus"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
+	ID   string
 	conn *websocket.Conn
 
 	send  chan []byte
 	close chan struct{}
+	bus   EventBus.Bus
 }
 
-func NewPlayerClient(conn *websocket.Conn) *Client {
+func NewPlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Client {
 	return &Client{
+		ID:    utils.GenerateRandomID(),
 		conn:  conn,
 		send:  make(chan []byte),
 		close: make(chan struct{}),
+		bus:   bus,
 	}
 }
 
@@ -59,6 +70,27 @@ func (client *Client) ReadPump() {
 
 		log.Printf("[recv from %s]: (t: %d, lens:%d) - %s",
 			client.conn.RemoteAddr(), mt, len(message), message)
+
+		if mt == websocket.TextMessage {
+			kind, payload, err := msg.Parsing([]byte(message))
+			if err != nil {
+				return
+			}
+			switch kind {
+			case msg.KindCreateRoomRequest:
+				var req msg.CreateRoomRequest
+				if err := json.Unmarshal(payload, &req); err != nil {
+					log.Printf("[error] json.Unmarshal: %v", err)
+					return
+				}
+
+				evt := event.CreateRoomEvent{
+					PlayerID:  client.ID,
+					RoomTitle: req.RoomTitle,
+				}
+				client.bus.Publish(event.ApplyForCreateRoom, &evt)
+			}
+		}
 	}
 }
 
@@ -99,6 +131,29 @@ func (client *Client) WritePump() {
 	}
 }
 
-func (client *Client) SendRawMessage(raw []byte) {
+func (client *Client) sendRawMessage(raw []byte) {
 	client.send <- raw
+}
+
+func (client *Client) ApplyToCreateRoom() error {
+	req := pb.CreateRoomRequest{
+		RoomTitle: "test1",
+	}
+	bytes, err := proto.Marshal(&req)
+	if err != nil {
+		return err
+	}
+
+	msgPack := pb.UserMsgPack{
+		Kind: pb.MsgKind_MsgCreateRoomRequest,
+		Data: bytes,
+	}
+
+	raw, err := proto.Marshal(&msgPack)
+	if err != nil {
+		return err
+	}
+
+	client.sendRawMessage(raw)
+	return nil
 }

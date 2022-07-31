@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"DaisyClubHouse/goband/chessboard"
 	"DaisyClubHouse/goband/player"
 	"github.com/gorilla/websocket"
 )
@@ -16,7 +17,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request) {
+func wsHandler(w http.ResponseWriter, r *http.Request, game *chessboard.ChessBoard) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatalf("upgrade error: %v", err)
@@ -26,14 +27,19 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s connected\n", c.RemoteAddr())
 
 	// 初始化玩家客户端
-	player.NewPlayerClient(c).Run()
+	client := player.NewPlayerClient(c, game.Bus)
+	game.ClientConnected(client)
+
+	client.Run()
 }
 
 func main() {
 	const address = "127.0.0.1:9000"
 
+	game := chessboard.NewChessBoard()
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		wsHandler(w, r)
+		wsHandler(w, r, game)
 	})
 
 	log.Printf("listening on %s\n", address)
