@@ -34,4 +34,9 @@ func (room *Room) PlayerJoin(player *player.Client) {
 	room.lock.Unlock()
 
 	log.Printf("Player[%s] Joined Room[%s]\n", player.ID, room.ID)
+
+	// TODO 准备开始游戏
+	log.Println("----------Ready to start game----------")
+	log.Printf("|Room[%s] Owner: %s\n, Player: %s\n", room.ID, room.Owner.ID, room.Player.ID)
+	log.Println("----------Ready to start game----------")
 }

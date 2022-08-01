@@ -1,8 +1,8 @@
 package event
 
 const (
-	ApplyForCreateRoom  = "ApplyForCreatingRoom" // 申请房间
-	ApplyForJoiningRoom = "ApplyForJoiningRoom"  // 申请加入房间
+	ApplyForCreatingRoom = "ApplyForCreatingRoom" // 申请房间
+	ApplyForJoiningRoom  = "ApplyForJoiningRoom"  // 申请加入房间
 )
 
 // CreateRoomEvent 创建房间事件
@@ -13,6 +13,6 @@ type CreateRoomEvent struct {
 
 // JoinRoomEvent 加入房间事件
 type JoinRoomEvent struct {
-	RoomID   string // 房间ID
 	PlayerID string // 玩家ID
+	RoomCode string // 房间短码
 }

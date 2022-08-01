@@ -9,9 +9,7 @@ import (
 	"DaisyClubHouse/goband/event"
 	"DaisyClubHouse/goband/msg"
 	"DaisyClubHouse/utils"
-	pb "github.com/DaisyClubHouse/proto/generated"
 	"github.com/asaskevich/EventBus"
-	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
 
@@ -72,7 +70,7 @@ func (client *Client) readPump() {
 			client.conn.RemoteAddr(), mt, len(message), message)
 
 		if mt == websocket.TextMessage {
-			kind, payload, err := msg.Parsing([]byte(message))
+			kind, payload, err := msg.Parsing(message)
 			if err != nil {
 				return
 			}
@@ -88,7 +86,19 @@ func (client *Client) readPump() {
 					PlayerID:  client.ID,
 					RoomTitle: req.RoomTitle,
 				}
-				client.bus.Publish(event.ApplyForCreateRoom, &evt)
+				client.bus.Publish(event.ApplyForCreatingRoom, &evt)
+			case msg.KindJoinRoomRequest:
+				var req msg.JoinRoomRequest
+				if err := json.Unmarshal(payload, &req); err != nil {
+					log.Printf("[error] json.Unmarshal: %v", err)
+					return
+				}
+
+				evt := event.JoinRoomEvent{
+					PlayerID: client.ID,
+					RoomCode: req.ShortCode,
+				}
+				client.bus.Publish(event.ApplyForJoiningRoom, &evt)
 			}
 		}
 	}
@@ -136,25 +146,30 @@ func (client *Client) sendRawMessage(raw []byte) {
 }
 
 // ApplyForCreatingRoom 发送创建房间请求
-func (client *Client) ApplyForCreatingRoom() error {
-	req := pb.CreateRoomRequest{
-		RoomTitle: "test1",
-	}
-	bytes, err := proto.Marshal(&req)
-	if err != nil {
-		return err
-	}
-
-	msgPack := pb.UserMsgPack{
-		Kind: pb.MsgKind_MsgCreateRoomRequest,
-		Data: bytes,
-	}
-
-	raw, err := proto.Marshal(&msgPack)
-	if err != nil {
-		return err
-	}
-
-	client.sendRawMessage(raw)
-	return nil
-}
+// func (client *Client) ApplyForCreatingRoom() error {
+// 	req := pb.CreateRoomRequest{
+// 		RoomTitle: "test1",
+// 	}
+// 	bytes, err := proto.Marshal(&req)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	msgPack := pb.UserMsgPack{
+// 		Kind: pb.MsgKind_MsgCreateRoomRequest,
+// 		Data: bytes,
+// 	}
+//
+// 	raw, err := proto.Marshal(&msgPack)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	client.sendRawMessage(raw)
+// 	return nil
+// }
+//
+// // ApplyForJoiningRoom 发送加入房间请求
+// func (client *Client) ApplyForJoiningRoom() error {
+//
+// }
