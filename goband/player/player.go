@@ -141,7 +141,7 @@ func (client *Client) writePump() {
 	}
 }
 
-func (client *Client) sendRawMessage(raw []byte) {
+func (client *Client) SendRawMessage(raw []byte) {
 	client.send <- raw
 }
 

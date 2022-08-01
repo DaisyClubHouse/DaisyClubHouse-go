@@ -5,9 +5,14 @@ import (
 	"log"
 )
 
-type msgPack[T interface{}] struct {
+type UserPack[T interface{}] struct {
 	Type    Kind `json:"type"`
 	Payload T    `json:"payload"`
+}
+
+func (p *UserPack[T]) Marshal() []byte {
+	bytes, _ := json.Marshal(p)
+	return bytes
 }
 
 type Kind int
@@ -18,10 +23,15 @@ const (
 	KindCreateRoomResponse             //
 	KindJoinRoomRequest                // 请求加入房间
 	KindJoinRoomResponse               //
+
+)
+const (
+	KindBroadcastRoomGameBeginning   Kind = iota + 100 // 广播游戏开始 100
+	KindBroadcastRoomPlayerOperation                   // 广播玩家操作落子
 )
 
 func Parsing(data []byte) (Kind, []byte, error) {
-	var packer msgPack[interface{}]
+	var packer UserPack[interface{}]
 	if err := json.Unmarshal(data, &packer); err != nil {
 		return KindUnknown, nil, err
 	}
@@ -34,4 +44,10 @@ func Parsing(data []byte) (Kind, []byte, error) {
 	}
 
 	return packer.Type, bytes, nil
+}
+
+// PackingGameBeginning 封装游戏开始消息
+func PackingGameBeginning() []byte {
+
+	return nil
 }

@@ -17,3 +17,8 @@ func GenerateSixFigure() string {
 	rand.Seed(time.Now().UnixNano())
 	return fmt.Sprintf("%06v", rand.Int31n(1000000))
 }
+
+func RandomHalfRate() bool {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(2) == 1
+}

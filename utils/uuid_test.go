@@ -13,3 +13,9 @@ func TestGenerateSixFigure(t *testing.T) {
 		t.Log(GenerateSixFigure())
 	}
 }
+
+func TestRandomHalfRate(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		t.Log(RandomHalfRate())
+	}
+}

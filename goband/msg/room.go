@@ -15,3 +15,10 @@ type JoinRoomRequest struct {
 type JoinRoomResponse struct {
 	RoomID string `json:"room_id"` // 房间ID
 }
+
+type BroadcastGameBeginning struct {
+	RoomID      string `json:"room_id"`      // 房间ID
+	WhiteHolder string `json:"white_holder"` // 白棋所有者ID
+	BlackHolder string `json:"black_holder"` // 黑棋所有者ID
+	WhoseTurn   string `json:"whose_turn"`   // 轮到谁下
+}
