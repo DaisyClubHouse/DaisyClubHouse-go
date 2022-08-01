@@ -26,7 +26,7 @@ func NewChessBoard() *ChessBoard {
 		rooms:   make(map[string]*room.Room),
 	}
 
-	err := bus.Subscribe(event.ApplyForCreateRoom, chessboard.eventApplyForCreateRoom)
+	err := bus.Subscribe(event.ApplyForCreateRoom, chessboard.eventApplyForCreatingRoom)
 	if err != nil {
 		log.Fatalf("Subscribe error: %v\n", err)
 		return nil
@@ -35,8 +35,9 @@ func NewChessBoard() *ChessBoard {
 	return &chessboard
 }
 
-func (b *ChessBoard) eventApplyForCreateRoom(event *event.CreateRoomEvent) {
-	log.Printf("eventApplyForCreateRoom: %v\n", event)
+// 创建房间处理事件
+func (b *ChessBoard) eventApplyForCreatingRoom(event *event.CreateRoomEvent) {
+	log.Printf("eventApplyForCreatingRoom: %v\n", event)
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
@@ -44,6 +45,11 @@ func (b *ChessBoard) eventApplyForCreateRoom(event *event.CreateRoomEvent) {
 
 	newRoom := room.NewRoom(client)
 	b.rooms[newRoom.ID] = newRoom
+}
+
+// 加入房间处理事件
+func (b *ChessBoard) eventApplyForJoiningRoom() {
+
 }
 
 func (b *ChessBoard) ClientConnected(client *player.Client) {

@@ -44,15 +44,15 @@ func (client *Client) Run() {
 		return nil
 	})
 
-	go client.WritePump()
-	go client.ReadPump()
+	go client.writePump()
+	go client.readPump()
 }
 
 func (client *Client) RemoteAddr() net.Addr {
 	return client.conn.RemoteAddr()
 }
 
-func (client *Client) ReadPump() {
+func (client *Client) readPump() {
 	defer func() {
 		client.conn.Close()
 	}()
@@ -94,7 +94,7 @@ func (client *Client) ReadPump() {
 	}
 }
 
-func (client *Client) WritePump() {
+func (client *Client) writePump() {
 	defer func() {
 		client.conn.Close()
 	}()
