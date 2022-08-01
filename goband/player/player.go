@@ -135,7 +135,8 @@ func (client *Client) sendRawMessage(raw []byte) {
 	client.send <- raw
 }
 
-func (client *Client) ApplyToCreateRoom() error {
+// ApplyForCreatingRoom 发送创建房间请求
+func (client *Client) ApplyForCreatingRoom() error {
 	req := pb.CreateRoomRequest{
 		RoomTitle: "test1",
 	}
