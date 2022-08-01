@@ -23,7 +23,6 @@ const (
 	KindCreateRoomResponse             //
 	KindJoinRoomRequest                // 请求加入房间
 	KindJoinRoomResponse               //
-
 )
 const (
 	KindBroadcastRoomGameBeginning   Kind = iota + 100 // 广播游戏开始 100
@@ -44,10 +43,4 @@ func Parsing(data []byte) (Kind, []byte, error) {
 	}
 
 	return packer.Type, bytes, nil
-}
-
-// PackingGameBeginning 封装游戏开始消息
-func PackingGameBeginning() []byte {
-
-	return nil
 }

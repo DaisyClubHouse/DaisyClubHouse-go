@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"DaisyClubHouse/goband/chessboard"
-	"DaisyClubHouse/goband/player"
+	"DaisyClubHouse/goband/game/chessboard"
+	"DaisyClubHouse/goband/game/player"
 	"github.com/gorilla/websocket"
 )
 

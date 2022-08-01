@@ -120,12 +120,16 @@ func (client *Client) writePump() {
 				return
 			}
 
-			w, err := client.conn.NextWriter(websocket.BinaryMessage)
+			w, err := client.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				log.Printf("[error] GetWriter: %v", err)
 				return
 			}
-			w.Write(message)
+			_, err = w.Write(message)
+			if err != nil {
+				log.Printf("[error] Write message: %v", err)
+				return
+			}
 
 			if err := w.Close(); err != nil {
 				log.Printf("[error] Close Writer: %v", err)
@@ -142,6 +146,7 @@ func (client *Client) writePump() {
 }
 
 func (client *Client) SendRawMessage(raw []byte) {
+	log.Printf("[send to %s] address:%s, lens:%d", client.ID, client.RemoteAddr(), len(raw))
 	client.send <- raw
 }
 

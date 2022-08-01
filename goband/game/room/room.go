@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
+	"DaisyClubHouse/goband/game/player"
 	"DaisyClubHouse/goband/msg"
-	"DaisyClubHouse/goband/player"
 	"DaisyClubHouse/utils"
 )
 
@@ -13,7 +13,7 @@ type Room struct {
 	ID          string
 	Owner       *player.Client
 	Player      *player.Client
-	lock        sync.RWMutex
+	lock        sync.Mutex
 	status      Status
 	whoseTurn   *player.Client
 	whiteHolder *player.Client // 执白棋的玩家（先行）
@@ -33,7 +33,7 @@ func NewRoom(owner *player.Client) *Room {
 		ID:          utils.GenerateRandomID(),
 		Owner:       owner,
 		Player:      nil,
-		lock:        sync.RWMutex{},
+		lock:        sync.Mutex{},
 		status:      Status_Waiting,
 		whoseTurn:   nil,
 		whiteHolder: nil,
@@ -53,7 +53,7 @@ func (room *Room) PlayerJoin(player *player.Client) {
 	log.Printf("Player[%s] Joined Room[%s]\n", player.ID, room.ID)
 
 	// 状态流转
-	room.gameBegin()
+	go room.gameBegin()
 }
 
 func (room *Room) OwnerHold() string {
@@ -127,6 +127,7 @@ func (room *Room) turnChanged() {
 
 // Broadcast 房间内广播
 func (room *Room) Broadcast(data []byte) {
+	log.Printf("[广播] room:%s lens:%d", room.ID, len(data))
 	if len(data) == 0 {
 		// 如果没有数据，则不发送
 		log.Println("------------------ERROR------------------")
@@ -134,8 +135,8 @@ func (room *Room) Broadcast(data []byte) {
 		return
 	}
 
-	room.lock.RLock()
-	defer room.lock.RUnlock()
+	room.lock.Lock()
+	defer room.lock.Unlock()
 
 	if room.Player != nil {
 		room.Player.SendRawMessage(data)

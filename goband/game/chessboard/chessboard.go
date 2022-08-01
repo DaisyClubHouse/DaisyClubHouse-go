@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"DaisyClubHouse/goband/event"
-	"DaisyClubHouse/goband/player"
-	"DaisyClubHouse/goband/room"
+	"DaisyClubHouse/goband/game/player"
+	"DaisyClubHouse/goband/game/room"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
 )
