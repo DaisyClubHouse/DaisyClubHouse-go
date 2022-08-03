@@ -91,6 +91,9 @@ func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 	targetRoom := b.rooms[roomId]
 	// 玩家加入
 	targetRoom.PlayerJoin(client)
+
+	// 生成玩家房间映射
+	b.playerRoomMapping[client.ID] = roomId
 }
 
 // 在棋盘上落子处理事件
@@ -98,11 +101,15 @@ func (b *GameManager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
 	log.Printf("eventApplyPlaceThePiece: %v\n", e)
 	b.lock.Lock()
 	defer b.lock.Unlock()
-
 	roomId := b.playerRoomMapping[e.PlayerID]
-	targetRoom := b.rooms[roomId]
+	targetRoom, ok := b.rooms[roomId]
+	if !ok {
+		log.Printf("未找到房间")
+		return
+	}
 
-	targetRoom.PlayerPlaceThePiece(e.PlayerID, e.X, e.Y)
+	result := targetRoom.PlayerPlaceThePiece(e.PlayerID, e.X, e.Y)
+	log.Println(result)
 }
 
 func (b *GameManager) ClientConnected(client *player.Client) {

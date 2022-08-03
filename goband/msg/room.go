@@ -27,3 +27,11 @@ type BroadcastGameBeginning struct {
 	BlackHolder string `json:"black_holder"` // 黑棋所有者ID
 	WhoseTurn   string `json:"whose_turn"`   // 轮到谁下
 }
+
+type BroadcastPlayerPlaceThePiece struct {
+	RoomID     string `json:"room_id"`     // 房间ID
+	PlayerID   string `json:"player_id"`   // 玩家ID
+	PieceWhite bool   `json:"piece_white"` // 是否是白棋
+	X          int    `json:"x"`           // 横坐标
+	Y          int    `json:"y"`           // 纵坐标
+}

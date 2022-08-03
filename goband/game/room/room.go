@@ -81,9 +81,6 @@ func (room *Room) PlayerHold() string {
 }
 
 func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
-	room.lock.Lock()
-	defer room.lock.Unlock()
-
 	if room.status != Status_Playing {
 		return "游戏未开始"
 	}
@@ -109,7 +106,16 @@ func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
 	// 	return "黑棋获胜"
 	// }
 
-	// TODO 广播玩家落子信息
+	// 广播玩家落子信息
+	pack := msg.UserPack[msg.BroadcastPlayerPlaceThePiece]{
+		Type: msg.KindBroadcastPlayerPlaceThePiece,
+		Payload: msg.BroadcastPlayerPlaceThePiece{
+			RoomID:   room.ID,
+			PlayerID: playerID,
+			X:        x,
+			Y:        y,
+		},
+	}
 
 	// 切换回合
 	if room.whoseTurn == room.whiteHolder {
@@ -118,6 +124,7 @@ func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
 		room.whoseTurn = room.whiteHolder
 	}
 
+	go room.Broadcast(pack.Marshal())
 	return "OK"
 }
 

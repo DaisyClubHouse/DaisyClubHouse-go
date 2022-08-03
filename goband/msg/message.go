@@ -28,7 +28,7 @@ const (
 )
 const (
 	KindBroadcastRoomGameBeginning   Kind = iota + 100 // 广播游戏开始 100
-	KindBroadcastRoomPlayerOperation                   // 广播玩家操作落子
+	KindBroadcastPlayerPlaceThePiece                   // 广播玩家操作落子
 )
 
 func Parsing(data []byte) (Kind, []byte, error) {
