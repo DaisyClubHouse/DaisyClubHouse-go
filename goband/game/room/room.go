@@ -80,6 +80,47 @@ func (room *Room) PlayerHold() string {
 	}
 }
 
+func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
+	room.lock.Lock()
+	defer room.lock.Unlock()
+
+	if room.status != Status_Playing {
+		return "游戏未开始"
+	}
+
+	if room.whoseTurn != nil && room.whoseTurn.ID != playerID {
+		return "不是你的回合"
+	}
+
+	if room.whiteHolder.ID == playerID {
+		room.whiteMatrix.Put(x, y)
+	} else if room.blackHolder.ID == playerID {
+		room.blackMatrix.Put(x, y)
+	} else {
+		return "不是你的回合"
+	}
+
+	// 判断是否获胜
+	// if room.whiteMatrix.IsWin(x, y) {
+	// 	room.status = Status_Finished
+	// 	return "白棋获胜"
+	// } else if room.blackMatrix.IsWin(x, y) {
+	// 	room.status = Status_Finished
+	// 	return "黑棋获胜"
+	// }
+
+	// TODO 广播玩家落子信息
+
+	// 切换回合
+	if room.whoseTurn == room.whiteHolder {
+		room.whoseTurn = room.blackHolder
+	} else {
+		room.whoseTurn = room.whiteHolder
+	}
+
+	return "OK"
+}
+
 func (room *Room) gameBegin() {
 	room.status = Status_Playing
 

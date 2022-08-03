@@ -18,11 +18,13 @@ func (p *UserPack[T]) Marshal() []byte {
 type Kind int
 
 const (
-	KindUnknown            Kind = iota // 未知消息
-	KindCreateRoomRequest              // 请求创建房间
-	KindCreateRoomResponse             //
-	KindJoinRoomRequest                // 请求加入房间
-	KindJoinRoomResponse               //
+	KindUnknown               Kind = iota // 未知消息
+	KindCreateRoomRequest                 // 请求创建房间
+	KindCreateRoomResponse                //
+	KindJoinRoomRequest                   // 请求加入房间
+	KindJoinRoomResponse                  //
+	KindPlaceThePieceRequest              // 请求下棋
+	KindPlaceThePieceResponse             //
 )
 const (
 	KindBroadcastRoomGameBeginning   Kind = iota + 100 // 广播游戏开始 100

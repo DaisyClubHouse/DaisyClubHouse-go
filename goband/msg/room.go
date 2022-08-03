@@ -16,6 +16,11 @@ type JoinRoomResponse struct {
 	RoomID string `json:"room_id"` // 房间ID
 }
 
+type PlaceThePieceRequest struct {
+	X int `json:"x"` // 横坐标
+	Y int `json:"y"` // 纵坐标
+}
+
 type BroadcastGameBeginning struct {
 	RoomID      string `json:"room_id"`      // 房间ID
 	WhiteHolder string `json:"white_holder"` // 白棋所有者ID

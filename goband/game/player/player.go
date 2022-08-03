@@ -99,6 +99,18 @@ func (client *Client) readPump() {
 					RoomCode: req.ShortCode,
 				}
 				client.bus.Publish(event.ApplyForJoiningRoom, &evt)
+			case msg.KindPlaceThePieceRequest:
+				var req msg.PlaceThePieceRequest
+				if err := json.Unmarshal(payload, &req); err != nil {
+					log.Printf("[error] json.Unmarshal: %v", err)
+					return
+				}
+				evt := event.PlaceThePieceEvent{
+					PlayerID: client.ID,
+					X:        req.X,
+					Y:        req.Y,
+				}
+				client.bus.Publish(event.ApplyPlaceThePiece, &evt)
 			}
 		}
 	}

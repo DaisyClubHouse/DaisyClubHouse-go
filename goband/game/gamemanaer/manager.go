@@ -12,21 +12,23 @@ import (
 )
 
 type GameManager struct {
-	clients         map[string]*player.Client
-	lock            sync.RWMutex
-	Bus             EventBus.Bus
-	rooms           map[string]*room.Room
-	codeRoomMapping map[string]string // code -> roomID
+	clients           map[string]*player.Client
+	lock              sync.RWMutex
+	Bus               EventBus.Bus
+	rooms             map[string]*room.Room
+	codeRoomMapping   map[string]string // code -> roomID
+	playerRoomMapping map[string]string // playerID -> roomID
 }
 
 func NewGameManager() *GameManager {
 	bus := EventBus.New()
 	chessboard := GameManager{
-		clients:         make(map[string]*player.Client),
-		lock:            sync.RWMutex{},
-		Bus:             bus,
-		rooms:           make(map[string]*room.Room),
-		codeRoomMapping: make(map[string]string),
+		clients:           make(map[string]*player.Client),
+		lock:              sync.RWMutex{},
+		Bus:               bus,
+		rooms:             make(map[string]*room.Room),
+		codeRoomMapping:   make(map[string]string),
+		playerRoomMapping: make(map[string]string),
 	}
 
 	err := bus.Subscribe(event.ApplyForCreatingRoom, chessboard.eventApplyForCreatingRoom)
@@ -36,6 +38,12 @@ func NewGameManager() *GameManager {
 	}
 
 	err = bus.Subscribe(event.ApplyForJoiningRoom, chessboard.eventApplyForJoiningRoom)
+	if err != nil {
+		log.Fatalf("Subscribe error: %v\n", err)
+		return nil
+	}
+
+	err = bus.Subscribe(event.ApplyPlaceThePiece, chessboard.eventApplyPlaceThePiece)
 	if err != nil {
 		log.Fatalf("Subscribe error: %v\n", err)
 		return nil
@@ -59,6 +67,9 @@ func (b *GameManager) eventApplyForCreatingRoom(event *event.CreateRoomEvent) {
 	code := utils.GenerateSixFigure()
 	b.codeRoomMapping[code] = newRoom.ID
 
+	// 生成玩家房间映射
+	b.playerRoomMapping[client.ID] = newRoom.ID
+
 	log.Printf("【创建新房间】code: %s, roomID: %s\n", code, newRoom.ID)
 }
 
@@ -80,6 +91,18 @@ func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 	targetRoom := b.rooms[roomId]
 	// 玩家加入
 	targetRoom.PlayerJoin(client)
+}
+
+// 在棋盘上落子处理事件
+func (b *GameManager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
+	log.Printf("eventApplyPlaceThePiece: %v\n", e)
+	b.lock.Lock()
+	defer b.lock.Unlock()
+
+	roomId := b.playerRoomMapping[e.PlayerID]
+	targetRoom := b.rooms[roomId]
+
+	targetRoom.PlayerPlaceThePiece(e.PlayerID, e.X, e.Y)
 }
 
 func (b *GameManager) ClientConnected(client *player.Client) {
