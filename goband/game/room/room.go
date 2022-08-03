@@ -18,6 +18,8 @@ type Room struct {
 	whoseTurn   *player.Client
 	whiteHolder *player.Client // 执白棋的玩家（先行）
 	blackHolder *player.Client // 执黑棋的玩家（后行）
+	whiteMatrix ChessMatrix    // 白棋的棋盘
+	blackMatrix ChessMatrix    // 黑棋的棋盘
 }
 
 type Status int
@@ -38,6 +40,8 @@ func NewRoom(owner *player.Client) *Room {
 		whoseTurn:   nil,
 		whiteHolder: nil,
 		blackHolder: nil,
+		whiteMatrix: NewChessMatrix(15),
+		blackMatrix: NewChessMatrix(15),
 	}
 
 	log.Printf("NewRoom[%s] Created by Player(%s::%v)\n",
