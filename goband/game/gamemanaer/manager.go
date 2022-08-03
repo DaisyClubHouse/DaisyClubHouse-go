@@ -1,4 +1,4 @@
-package chessboard
+package gamemanaer
 
 import (
 	"log"
@@ -11,7 +11,7 @@ import (
 	"github.com/asaskevich/EventBus"
 )
 
-type ChessBoard struct {
+type GameManager struct {
 	clients         map[string]*player.Client
 	lock            sync.RWMutex
 	Bus             EventBus.Bus
@@ -19,9 +19,9 @@ type ChessBoard struct {
 	codeRoomMapping map[string]string // code -> roomID
 }
 
-func NewChessBoard() *ChessBoard {
+func NewGameManager() *GameManager {
 	bus := EventBus.New()
-	chessboard := ChessBoard{
+	chessboard := GameManager{
 		clients:         make(map[string]*player.Client),
 		lock:            sync.RWMutex{},
 		Bus:             bus,
@@ -45,7 +45,7 @@ func NewChessBoard() *ChessBoard {
 }
 
 // 创建房间处理事件
-func (b *ChessBoard) eventApplyForCreatingRoom(event *event.CreateRoomEvent) {
+func (b *GameManager) eventApplyForCreatingRoom(event *event.CreateRoomEvent) {
 	log.Printf("eventApplyForCreatingRoom: %v\n", event)
 	b.lock.Lock()
 	defer b.lock.Unlock()
@@ -63,7 +63,7 @@ func (b *ChessBoard) eventApplyForCreatingRoom(event *event.CreateRoomEvent) {
 }
 
 // 加入房间处理事件
-func (b *ChessBoard) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
+func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 	log.Printf("eventApplyForJoiningRoom: %v\n", e)
 	b.lock.Lock()
 	defer b.lock.Unlock()
@@ -82,14 +82,14 @@ func (b *ChessBoard) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 	targetRoom.PlayerJoin(client)
 }
 
-func (b *ChessBoard) ClientConnected(client *player.Client) {
+func (b *GameManager) ClientConnected(client *player.Client) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
 	b.clients[client.ID] = client
 }
 
-func (b *ChessBoard) ClientDisconnected(client *player.Client) {
+func (b *GameManager) ClientDisconnected(client *player.Client) {
 	log.Println("ClientDisconnected")
 	b.lock.Lock()
 	defer b.lock.Unlock()

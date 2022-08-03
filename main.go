@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"DaisyClubHouse/goband/game/chessboard"
+	"DaisyClubHouse/goband/game/gamemanaer"
 	"DaisyClubHouse/goband/game/player"
 	"github.com/gorilla/websocket"
 )
@@ -17,7 +17,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request, game *chessboard.ChessBoard) {
+func wsHandler(w http.ResponseWriter, r *http.Request, game *gamemanaer.GameManager) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatalf("upgrade error: %v", err)
@@ -36,7 +36,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, game *chessboard.ChessBoa
 func main() {
 	const address = "127.0.0.1:9000"
 
-	game := chessboard.NewChessBoard()
+	game := gamemanaer.NewGameManager()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		wsHandler(w, r, game)
