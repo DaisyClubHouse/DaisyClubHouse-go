@@ -110,10 +110,11 @@ func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
 	pack := msg.UserPack[msg.BroadcastPlayerPlaceThePiece]{
 		Type: msg.KindBroadcastPlayerPlaceThePiece,
 		Payload: msg.BroadcastPlayerPlaceThePiece{
-			RoomID:   room.ID,
-			PlayerID: playerID,
-			X:        x,
-			Y:        y,
+			RoomID:     room.ID,
+			PlayerID:   playerID,
+			PieceWhite: room.whiteHolder.ID == room.whoseTurn.ID,
+			X:          x,
+			Y:          y,
 		},
 	}
 
