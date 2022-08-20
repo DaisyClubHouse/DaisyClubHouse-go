@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package room;
+
+import "api.proto";
+
+message CreateRoomReq {
+  string Name = 1[(api.query) = "name"];
+}
+
+message CreateRoomResp {
+  string RespBody = 1;
+}
+
+service RoomService {
+  rpc CreateRoom(CreateRoomReq) returns(CreateRoomResp) {
+    option (api.post) = "/api/room/create";
+  }
+}

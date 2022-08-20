@@ -3,10 +3,12 @@ module DaisyClubHouse
 go 1.18
 
 require (
+	github.com/apache/thrift v0.16.0
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/cloudwego/hertz v0.2.1
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
+	go.uber.org/fx v1.18.1
 )
 
 require (
@@ -26,7 +28,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	go.uber.org/atomic v1.6.0 // indirect
 	go.uber.org/dig v1.15.0 // indirect
-	go.uber.org/fx v1.18.1 // indirect
 	go.uber.org/multierr v1.5.0 // indirect
 	go.uber.org/zap v1.16.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
