@@ -9,7 +9,13 @@ message CreateRoomReq {
 }
 
 message CreateRoomResp {
-  string RespBody = 1;
+  int32 Code = 1; // 0: success
+  string Message = 2;
+  CreateRoomRespData Data = 3; // 数据
+}
+
+message CreateRoomRespData {
+  string RoomId = 1;
 }
 
 service RoomService {
