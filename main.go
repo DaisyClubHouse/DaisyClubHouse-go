@@ -6,6 +6,7 @@ import (
 
 	"DaisyClubHouse/goband/game/gamemanaer"
 	"DaisyClubHouse/goband/game/player"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -34,7 +35,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, game *gamemanaer.GameMana
 }
 
 func main() {
-	const address = "127.0.0.1:9000"
+	const address = "0.0.0.0:8000"
 
 	game := gamemanaer.NewGameManager()
 
