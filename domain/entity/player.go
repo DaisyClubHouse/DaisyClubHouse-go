@@ -1,4 +1,4 @@
-package player
+package entity
 
 import (
 	"encoding/json"

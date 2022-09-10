@@ -1,21 +1,20 @@
-package gamemanaer
+package aggregate
 
 import (
 	"log"
 	"sync"
 
+	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/goband/event"
-	"DaisyClubHouse/goband/game/player"
-	"DaisyClubHouse/goband/game/room"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
 )
 
 type GameManager struct {
-	clients           map[string]*player.Client
+	clients           map[string]*entity.Client
 	lock              sync.RWMutex
 	Bus               EventBus.Bus
-	rooms             map[string]*room.Room
+	rooms             map[string]*Room
 	codeRoomMapping   map[string]string // code -> roomID
 	playerRoomMapping map[string]string // playerID -> roomID
 }
@@ -23,10 +22,10 @@ type GameManager struct {
 func NewGameManager() *GameManager {
 	bus := EventBus.New()
 	chessboard := GameManager{
-		clients:           make(map[string]*player.Client),
+		clients:           make(map[string]*entity.Client),
 		lock:              sync.RWMutex{},
 		Bus:               bus,
-		rooms:             make(map[string]*room.Room),
+		rooms:             make(map[string]*Room),
 		codeRoomMapping:   make(map[string]string),
 		playerRoomMapping: make(map[string]string),
 	}
@@ -60,7 +59,7 @@ func (b *GameManager) eventApplyForCreatingRoom(event *event.CreateRoomEvent) {
 
 	client := b.clients[event.PlayerID]
 
-	newRoom := room.NewRoom(client)
+	newRoom := NewRoom(client)
 	b.rooms[newRoom.ID] = newRoom
 
 	// 生成随机code映射
@@ -112,14 +111,14 @@ func (b *GameManager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
 	log.Println(result)
 }
 
-func (b *GameManager) ClientConnected(client *player.Client) {
+func (b *GameManager) ClientConnected(client *entity.Client) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
 	b.clients[client.ID] = client
 }
 
-func (b *GameManager) ClientDisconnected(client *player.Client) {
+func (b *GameManager) ClientDisconnected(client *entity.Client) {
 	log.Println("ClientDisconnected")
 	b.lock.Lock()
 	defer b.lock.Unlock()

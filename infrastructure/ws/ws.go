@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"DaisyClubHouse/goband/game/gamemanaer"
+	"DaisyClubHouse/domain/aggregate"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -17,7 +17,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request, game *gamemanaer.GameManager) {
+func wsHandler(w http.ResponseWriter, r *http.Request, game *aggregate.GameManager) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatalf("upgrade error: %v", err)
@@ -49,7 +49,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, game *gamemanaer.GameMana
 	// client.Run()
 }
 
-func WebsocketAdaptor(game *gamemanaer.GameManager) gin.HandlerFunc {
+func WebsocketAdaptor(game *aggregate.GameManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		wsHandler(c.Writer, c.Request, game)
 	}

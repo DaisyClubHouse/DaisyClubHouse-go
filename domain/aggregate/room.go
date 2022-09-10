@@ -1,25 +1,25 @@
-package room
+package aggregate
 
 import (
 	"log"
 	"sync"
 
-	"DaisyClubHouse/goband/game/player"
+	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/goband/msg"
 	"DaisyClubHouse/utils"
 )
 
 type Room struct {
 	ID          string
-	Owner       *player.Client
-	Player      *player.Client
+	Owner       *entity.Client
+	Player      *entity.Client
 	lock        sync.Mutex
 	status      Status
-	whoseTurn   *player.Client
-	whiteHolder *player.Client // 执白棋的玩家（先行）
-	blackHolder *player.Client // 执黑棋的玩家（后行）
-	whiteMatrix *ChessMatrix   // 白棋的棋盘
-	blackMatrix *ChessMatrix   // 黑棋的棋盘
+	whoseTurn   *entity.Client
+	whiteHolder *entity.Client      // 执白棋的玩家（先行）
+	blackHolder *entity.Client      // 执黑棋的玩家（后行）
+	whiteMatrix *entity.ChessMatrix // 白棋的棋盘
+	blackMatrix *entity.ChessMatrix // 黑棋的棋盘
 }
 
 type Status int
@@ -30,7 +30,7 @@ const (
 	Status_Finished        // 游戏结束
 )
 
-func NewRoom(owner *player.Client) *Room {
+func NewRoom(owner *entity.Client) *Room {
 	room := &Room{
 		ID:          utils.GenerateRandomID(),
 		Owner:       owner,
@@ -40,8 +40,8 @@ func NewRoom(owner *player.Client) *Room {
 		whoseTurn:   nil,
 		whiteHolder: nil,
 		blackHolder: nil,
-		whiteMatrix: NewChessMatrix(15),
-		blackMatrix: NewChessMatrix(15),
+		whiteMatrix: entity.NewChessMatrix(15),
+		blackMatrix: entity.NewChessMatrix(15),
 	}
 
 	log.Printf("NewRoom[%s] Created by Player(%s::%v)\n",
@@ -49,7 +49,7 @@ func NewRoom(owner *player.Client) *Room {
 	return room
 }
 
-func (room *Room) PlayerJoin(player *player.Client) {
+func (room *Room) PlayerJoin(player *entity.Client) {
 	room.lock.Lock()
 	defer room.lock.Unlock()
 

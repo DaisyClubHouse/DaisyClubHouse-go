@@ -1,4 +1,4 @@
-package room
+package entity
 
 type ChessMatrix struct {
 	matrix    [][]bool      // 排列矩阵 15*15
