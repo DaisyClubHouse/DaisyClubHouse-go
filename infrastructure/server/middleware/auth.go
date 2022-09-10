@@ -1,4 +1,4 @@
-package handler
+package middleware
 
 import (
 	"log"
@@ -48,17 +48,18 @@ func Authorization() *jwt.GinJWTMiddleware {
 			password := loginVals.Password
 
 			if (username == "player1" && password == "password") || (username == "player2" && password == "password") {
+				loc, _ := time.LoadLocation("Asia/Chongqing")
 				return &entity.User{
 					ID:         utils.GenerateRandomID(),
 					Username:   "player1",
 					Nickname:   "player1",
-					CreateTime: time.Now(),
+					CreateTime: time.Now().In(loc),
 				}, nil
 			}
 			return nil, jwt.ErrFailedAuthentication
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			if v, ok := data.(*entity.User); ok && v.Username == "player" {
+			if v, ok := data.(*entity.User); ok && v.Username == "player1" {
 				return true
 			}
 

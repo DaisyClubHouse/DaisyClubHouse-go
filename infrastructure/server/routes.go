@@ -42,5 +42,7 @@ func registerRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
 func helloHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	log.Println(claims)
-	c.JSON(200, gin.H{})
+	c.JSON(200, gin.H{
+		"hello": "world",
+	})
 }
