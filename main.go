@@ -1,14 +1,19 @@
 package main
 
 import (
-	"DaisyClubHouse/infrastructure/http"
-
+	"DaisyClubHouse/goband/game/gamemanaer"
+	"DaisyClubHouse/infrastructure/server"
+	"DaisyClubHouse/infrastructure/ws"
 	"go.uber.org/fx"
 )
 
 func main() {
 	app := fx.New(
-		fx.Invoke(http.ServerProvider),
+		// game
+		fx.Provide(gamemanaer.NewGameManager),
+		// server (http + ws)
+		fx.Provide(ws.WebsocketAdaptor),
+		fx.Invoke(server.HttpServer),
 	)
 	app.Run()
 }

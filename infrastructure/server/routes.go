@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"net/http"
@@ -6,15 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const httpAddr = ":3000"
-
-// ServerProvider HTTP服务
-func ServerProvider() {
-	r := gin.Default()
+// registerRoutes 注册HTTP路由
+func registerRoutes(r *gin.Engine) {
 	r.GET("/healthy", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "success!",
 		})
 	})
-	r.Run(httpAddr)
 }
