@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"DaisyClubHouse/infrastructure/server/middleware"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 )
@@ -15,6 +16,11 @@ const httpAddr = ":3000"
 // HttpServer 提供HTTP服务
 func HttpServer(lc fx.Lifecycle, wsFunc gin.HandlerFunc) {
 	r := gin.Default()
+
+	r.Use(
+		gin.Recovery(),
+		middleware.Logger(),
+	)
 
 	// ws
 	r.GET("/", wsFunc)
