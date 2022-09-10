@@ -12,7 +12,7 @@ import (
 
 var identityKey = "daisy-club-id"
 
-type login struct {
+type loginParams struct {
 	Username string `form:"username" json:"username" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
 }
@@ -39,15 +39,16 @@ func Authorization() *jwt.GinJWTMiddleware {
 			}
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
-			var loginVals login
-			if err := c.ShouldBind(&loginVals); err != nil {
+			var params loginParams
+			if err := c.ShouldBind(&params); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
 
-			username := loginVals.Username
-			password := loginVals.Password
+			username := params.Username
+			password := params.Password
 
-			if (username == "player1" && password == "password") || (username == "player2" && password == "password") {
+			if (username == "player1" && password == "password") ||
+				(username == "player2" && password == "password") {
 				loc, _ := time.LoadLocation("Asia/Chongqing")
 				return &entity.User{
 					ID:         utils.GenerateRandomID(),
