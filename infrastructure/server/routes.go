@@ -26,15 +26,10 @@ func registerRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
 		})
 	})
 
-	// auth
-	auth := r.Group("/auth", authMiddleware.MiddlewareFunc())
-	{
-		auth.GET("/refresh_token", authMiddleware.RefreshHandler)
-	}
-
 	// api
 	api := r.Group("/api", authMiddleware.MiddlewareFunc())
 	{
+		api.GET("/refresh_token", authMiddleware.RefreshHandler)
 		api.GET("/hello", helloHandler)
 	}
 }

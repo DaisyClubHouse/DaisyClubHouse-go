@@ -19,36 +19,45 @@ type GameManager struct {
 	playerRoomMapping map[string]string // playerID -> roomID
 }
 
+var once sync.Once
+
 func NewGameManager() *GameManager {
-	bus := EventBus.New()
-	chessboard := GameManager{
-		clients:           make(map[string]*entity.Client),
-		lock:              sync.RWMutex{},
-		Bus:               bus,
-		rooms:             make(map[string]*Room),
-		codeRoomMapping:   make(map[string]string),
-		playerRoomMapping: make(map[string]string),
-	}
+	var gm *GameManager
 
-	err := bus.Subscribe(event.ApplyForCreatingRoom, chessboard.eventApplyForCreatingRoom)
-	if err != nil {
-		log.Fatalf("Subscribe error: %v\n", err)
-		return nil
-	}
+	once.Do(func() {
+		gm = func() *GameManager {
+			bus := EventBus.New()
+			chessboard := GameManager{
+				clients:           make(map[string]*entity.Client),
+				lock:              sync.RWMutex{},
+				Bus:               bus,
+				rooms:             make(map[string]*Room),
+				codeRoomMapping:   make(map[string]string),
+				playerRoomMapping: make(map[string]string),
+			}
 
-	err = bus.Subscribe(event.ApplyForJoiningRoom, chessboard.eventApplyForJoiningRoom)
-	if err != nil {
-		log.Fatalf("Subscribe error: %v\n", err)
-		return nil
-	}
+			err := bus.Subscribe(event.ApplyForCreatingRoom, chessboard.eventApplyForCreatingRoom)
+			if err != nil {
+				log.Fatalf("Subscribe error: %v\n", err)
+				return nil
+			}
 
-	err = bus.Subscribe(event.ApplyPlaceThePiece, chessboard.eventApplyPlaceThePiece)
-	if err != nil {
-		log.Fatalf("Subscribe error: %v\n", err)
-		return nil
-	}
+			err = bus.Subscribe(event.ApplyForJoiningRoom, chessboard.eventApplyForJoiningRoom)
+			if err != nil {
+				log.Fatalf("Subscribe error: %v\n", err)
+				return nil
+			}
 
-	return &chessboard
+			err = bus.Subscribe(event.ApplyPlaceThePiece, chessboard.eventApplyPlaceThePiece)
+			if err != nil {
+				log.Fatalf("Subscribe error: %v\n", err)
+				return nil
+			}
+			return &chessboard
+		}()
+	})
+
+	return gm
 }
 
 // 创建房间处理事件
