@@ -14,7 +14,7 @@ type GameManager struct {
 	clients           map[string]*entity.Client
 	lock              sync.RWMutex
 	Bus               EventBus.Bus
-	rooms             map[string]*Room
+	rooms             map[string]*entity.Room
 	codeRoomMapping   map[string]string // code -> roomID
 	playerRoomMapping map[string]string // playerID -> roomID
 }
@@ -31,7 +31,7 @@ func NewGameManager() *GameManager {
 				clients:           make(map[string]*entity.Client),
 				lock:              sync.RWMutex{},
 				Bus:               bus,
-				rooms:             make(map[string]*Room),
+				rooms:             make(map[string]*entity.Room),
 				codeRoomMapping:   make(map[string]string),
 				playerRoomMapping: make(map[string]string),
 			}
@@ -68,7 +68,7 @@ func (b *GameManager) eventApplyForCreatingRoom(event *event.CreateRoomEvent) {
 
 	client := b.clients[event.PlayerID]
 
-	newRoom := NewRoom(client)
+	newRoom := entity.CreateNewRoom(client)
 	b.rooms[newRoom.ID] = newRoom
 
 	// 生成随机code映射

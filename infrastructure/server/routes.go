@@ -3,7 +3,9 @@ package server
 import (
 	"log"
 	"net/http"
+	"time"
 
+	"DaisyClubHouse/domain/entity"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 )
@@ -31,6 +33,26 @@ func registerRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
 	{
 		api.GET("/refresh_token", authMiddleware.RefreshHandler)
 		api.GET("/hello", helloHandler)
+
+		api.GET("/game/room/list", func(ctx *gin.Context) {
+			ctx.JSON(200, gin.H{
+				"code": 0,
+				"data": gin.H{
+					"list": []entity.RoomProfile{
+						{
+							ID:         "1",
+							Status:     0,
+							CreateTime: time.Now(),
+						},
+						{
+							ID:         "2",
+							Status:     0,
+							CreateTime: time.Now(),
+						},
+					},
+				},
+			})
+		})
 	}
 }
 

@@ -1,25 +1,33 @@
-package aggregate
+package entity
 
 import (
 	"log"
 	"sync"
+	"time"
 
-	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/goband/msg"
 	"DaisyClubHouse/utils"
 )
 
+// RoomProfile 房间概要信息
+type RoomProfile struct {
+	ID         string
+	Status     Status
+	CreateTime time.Time
+}
+
+// Room 房间
 type Room struct {
-	ID          string
-	Owner       *entity.Client
-	Player      *entity.Client
+	RoomProfile // 房间概要信息
+
+	Owner       *Client
+	Player      *Client
 	lock        sync.Mutex
-	status      Status
-	whoseTurn   *entity.Client
-	whiteHolder *entity.Client      // 执白棋的玩家（先行）
-	blackHolder *entity.Client      // 执黑棋的玩家（后行）
-	whiteMatrix *entity.ChessMatrix // 白棋的棋盘
-	blackMatrix *entity.ChessMatrix // 黑棋的棋盘
+	whoseTurn   *Client
+	whiteHolder *Client      // 执白棋的玩家（先行）
+	blackHolder *Client      // 执黑棋的玩家（后行）
+	whiteMatrix *ChessMatrix // 白棋的棋盘
+	blackMatrix *ChessMatrix // 黑棋的棋盘
 }
 
 type Status int
@@ -30,18 +38,23 @@ const (
 	Status_Finished        // 游戏结束
 )
 
-func NewRoom(owner *entity.Client) *Room {
+// CreateNewRoom 创建新房间
+func CreateNewRoom(owner *Client) *Room {
+	profile := RoomProfile{
+		ID:         utils.GenerateRandomID(),
+		Status:     Status_Waiting,
+		CreateTime: time.Now(),
+	}
 	room := &Room{
-		ID:          utils.GenerateRandomID(),
+		RoomProfile: profile,
 		Owner:       owner,
 		Player:      nil,
 		lock:        sync.Mutex{},
-		status:      Status_Waiting,
 		whoseTurn:   nil,
 		whiteHolder: nil,
 		blackHolder: nil,
-		whiteMatrix: entity.NewChessMatrix(15),
-		blackMatrix: entity.NewChessMatrix(15),
+		whiteMatrix: NewChessMatrix(15),
+		blackMatrix: NewChessMatrix(15),
 	}
 
 	log.Printf("NewRoom[%s] Created by Player(%s::%v)\n",
@@ -49,7 +62,7 @@ func NewRoom(owner *entity.Client) *Room {
 	return room
 }
 
-func (room *Room) PlayerJoin(player *entity.Client) {
+func (room *Room) PlayerJoin(player *Client) {
 	room.lock.Lock()
 	defer room.lock.Unlock()
 
@@ -81,7 +94,7 @@ func (room *Room) PlayerHold() string {
 }
 
 func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
-	if room.status != Status_Playing {
+	if room.Status != Status_Playing {
 		return "游戏未开始"
 	}
 
@@ -130,7 +143,7 @@ func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
 }
 
 func (room *Room) gameBegin() {
-	room.status = Status_Playing
+	room.Status = Status_Playing
 
 	// 准备开始游戏
 	log.Println("----------Ready to start game----------")
