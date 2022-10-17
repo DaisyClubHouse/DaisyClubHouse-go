@@ -33,9 +33,9 @@ type Room struct {
 type Status int
 
 const (
-	Status_Waiting  = iota // 等待玩家加入
-	Status_Playing         // 游戏中
-	Status_Finished        // 游戏结束
+	Status_Waiting    = iota // 等待玩家加入
+	Status_Playing           // 游戏中
+	Status_Settlement        // 游戏结算中
 )
 
 // CreateNewRoom 创建新房间
@@ -112,10 +112,10 @@ func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
 
 	// 判断是否获胜
 	// if room.whiteMatrix.IsWin(x, y) {
-	// 	room.status = Status_Finished
+	// 	room.status = Status_Settlement
 	// 	return "白棋获胜"
 	// } else if room.blackMatrix.IsWin(x, y) {
-	// 	room.status = Status_Finished
+	// 	room.status = Status_Settlement
 	// 	return "黑棋获胜"
 	// }
 

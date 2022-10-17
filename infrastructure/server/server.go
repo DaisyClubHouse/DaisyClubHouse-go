@@ -24,7 +24,7 @@ func HttpServer(lc fx.Lifecycle, wsFunc gin.HandlerFunc, jwt *jwt.GinJWTMiddlewa
 	)
 
 	// ws
-	r.GET("/", wsFunc)
+	r.GET("/ws", wsFunc)
 
 	// http
 	registerRoutes(r, jwt)
