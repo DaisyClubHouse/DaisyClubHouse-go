@@ -11,9 +11,10 @@ import (
 
 // RoomProfile 房间概要信息
 type RoomProfile struct {
-	ID         string
-	Status     Status
-	CreateTime time.Time
+	ID         string    // 房间唯一ID
+	Title      string    // 房间名称
+	Status     Status    // 房间状态
+	CreateTime time.Time // 创建时间
 }
 
 // Room 房间

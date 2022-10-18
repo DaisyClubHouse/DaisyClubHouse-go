@@ -29,7 +29,8 @@ func registerRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
 	})
 
 	// api
-	api := r.Group("/api", authMiddleware.MiddlewareFunc())
+	// api := r.Group("/api", authMiddleware.MiddlewareFunc())
+	api := r.Group("/api")
 	{
 		api.GET("/refresh_token", authMiddleware.RefreshHandler)
 		api.GET("/hello", helloHandler)
@@ -37,15 +38,18 @@ func registerRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
 		api.GET("/game/room/list", func(ctx *gin.Context) {
 			ctx.JSON(200, gin.H{
 				"code": 0,
+				"msg":  "success",
 				"data": gin.H{
 					"list": []entity.RoomProfile{
 						{
 							ID:         "1",
+							Title:      "房间0001",
 							Status:     0,
 							CreateTime: time.Now(),
 						},
 						{
 							ID:         "2",
+							Title:      "房间0002",
 							Status:     0,
 							CreateTime: time.Now(),
 						},
