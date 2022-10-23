@@ -43,6 +43,7 @@ func (handler *HttpServerHandler) CreateRoom() func(ctx *gin.Context) {
 			ID:         id,
 			Username:   name,
 			Nickname:   "",
+			Avatar:     fmt.Sprintf("https://api.multiavatar.com/%s.png", name),
 			CreateTime: time.Now(),
 		})
 		if err != nil {
