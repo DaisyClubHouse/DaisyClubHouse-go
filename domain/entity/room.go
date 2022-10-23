@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"DaisyClubHouse/goband/msg"
+	"DaisyClubHouse/gobang/msg"
 	"DaisyClubHouse/utils"
 )
 

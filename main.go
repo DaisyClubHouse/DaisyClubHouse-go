@@ -1,7 +1,7 @@
 package main
 
 import (
-	"DaisyClubHouse/domain/aggregate"
+	"DaisyClubHouse/gobang/manager"
 	"DaisyClubHouse/infrastructure/server"
 	"DaisyClubHouse/infrastructure/server/middleware"
 	"DaisyClubHouse/infrastructure/ws"
@@ -11,7 +11,7 @@ import (
 func main() {
 	app := fx.New(
 		// game
-		fx.Provide(aggregate.NewGameManager),
+		fx.Provide(manager.NewGameManagerInstance),
 		// server (http + ws)
 		fx.Provide(ws.WebsocketAdaptor),
 		fx.Provide(middleware.Authorization),

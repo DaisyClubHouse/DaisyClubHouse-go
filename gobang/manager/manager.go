@@ -1,11 +1,11 @@
-package aggregate
+package manager
 
 import (
 	"log"
 	"sync"
 
 	"DaisyClubHouse/domain/entity"
-	"DaisyClubHouse/goband/event"
+	"DaisyClubHouse/gobang/event"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
 )
@@ -21,7 +21,7 @@ type GameManager struct {
 
 var once sync.Once
 
-func NewGameManager() *GameManager {
+func NewGameManagerInstance() *GameManager {
 	var gm *GameManager
 
 	once.Do(func() {
@@ -56,6 +56,8 @@ func NewGameManager() *GameManager {
 			return &chessboard
 		}()
 	})
+
+	log.Println("初始化GameManager")
 
 	return gm
 }

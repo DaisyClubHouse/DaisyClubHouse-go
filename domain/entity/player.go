@@ -6,8 +6,8 @@ import (
 	"net"
 	"time"
 
-	"DaisyClubHouse/goband/event"
-	"DaisyClubHouse/goband/msg"
+	"DaisyClubHouse/gobang/event"
+	"DaisyClubHouse/gobang/msg"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
 	"github.com/gorilla/websocket"
