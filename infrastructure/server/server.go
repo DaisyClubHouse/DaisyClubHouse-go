@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"DaisyClubHouse/infrastructure/server/handler"
 	"DaisyClubHouse/infrastructure/server/middleware"
-	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 )
@@ -15,7 +15,7 @@ import (
 const httpAddr = ":3000"
 
 // HttpServer 提供HTTP服务
-func HttpServer(lc fx.Lifecycle, wsFunc gin.HandlerFunc, jwt *jwt.GinJWTMiddleware) {
+func HttpServer(lc fx.Lifecycle, wsFunc gin.HandlerFunc, handler *handler.HttpServerHandler) {
 	r := gin.Default()
 
 	r.Use(
@@ -27,7 +27,8 @@ func HttpServer(lc fx.Lifecycle, wsFunc gin.HandlerFunc, jwt *jwt.GinJWTMiddlewa
 	r.GET("/ws", wsFunc)
 
 	// http
-	registerRoutes(r, jwt)
+	jwt := middleware.Authorization()
+	RegisterRoutes(r, jwt, handler)
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {

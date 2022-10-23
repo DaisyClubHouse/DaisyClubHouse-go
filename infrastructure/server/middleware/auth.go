@@ -25,7 +25,7 @@ func Authorization() *jwt.GinJWTMiddleware {
 		MaxRefresh:  time.Hour,
 		IdentityKey: identityKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(*entity.User); ok {
+			if v, ok := data.(*entity.UserInfo); ok {
 				return jwt.MapClaims{
 					identityKey: v.Username,
 				}
@@ -34,7 +34,7 @@ func Authorization() *jwt.GinJWTMiddleware {
 		},
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
-			return &entity.User{
+			return &entity.UserInfo{
 				Username: claims[identityKey].(string),
 			}
 		},
@@ -50,7 +50,7 @@ func Authorization() *jwt.GinJWTMiddleware {
 			if (username == "player1" && password == "password") ||
 				(username == "player2" && password == "password") {
 				loc, _ := time.LoadLocation("Asia/Chongqing")
-				return &entity.User{
+				return &entity.UserInfo{
 					ID:         utils.GenerateRandomID(),
 					Username:   "player1",
 					Nickname:   "player1",
@@ -60,7 +60,7 @@ func Authorization() *jwt.GinJWTMiddleware {
 			return nil, jwt.ErrFailedAuthentication
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			if v, ok := data.(*entity.User); ok && v.Username == "player1" {
+			if v, ok := data.(*entity.UserInfo); ok && v.Username == "player1" {
 				return true
 			}
 

@@ -3,15 +3,14 @@ package server
 import (
 	"log"
 	"net/http"
-	"time"
 
-	"DaisyClubHouse/domain/entity"
+	"DaisyClubHouse/infrastructure/server/handler"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 )
 
-// registerRoutes 注册HTTP路由
-func registerRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
+// RegisterRoutes 注册HTTP路由
+func RegisterRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware, handler *handler.HttpServerHandler) {
 	r.GET("/healthy", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "success!",
@@ -35,28 +34,8 @@ func registerRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
 		api.GET("/refresh_token", authMiddleware.RefreshHandler)
 		api.GET("/hello", helloHandler)
 
-		api.GET("/game/room/list", func(ctx *gin.Context) {
-			ctx.JSON(200, gin.H{
-				"code": 0,
-				"msg":  "success",
-				"data": gin.H{
-					"list": []entity.RoomProfile{
-						{
-							ID:         "1",
-							Title:      "房间0001",
-							Status:     0,
-							CreateTime: time.Now(),
-						},
-						{
-							ID:         "2",
-							Title:      "房间0002",
-							Status:     0,
-							CreateTime: time.Now(),
-						},
-					},
-				},
-			})
-		})
+		api.GET("/game/room/list", handler.GetRoomProfileListHandler())
+
 	}
 }
 

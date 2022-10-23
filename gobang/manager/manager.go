@@ -91,7 +91,6 @@ func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 
 	roomId, ok := b.codeRoomMapping[e.RoomCode]
 	if !ok {
-		// TODO 通知玩家未找到房间
 		log.Printf("通知玩家未找到房间")
 		log.Println(b.codeRoomMapping)
 		return
@@ -135,4 +134,13 @@ func (b *GameManager) ClientDisconnected(client *entity.Client) {
 	defer b.lock.Unlock()
 
 	delete(b.clients, client.ID)
+}
+
+// RoomProfileList 查询房间简要信息列表
+func (b *GameManager) RoomProfileList() []entity.RoomProfile {
+	profileList := make([]entity.RoomProfile, 0, len(b.rooms))
+	for _, room := range b.rooms {
+		profileList = append(profileList, room.RoomProfile)
+	}
+	return profileList
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"DaisyClubHouse/gobang/manager"
 	"DaisyClubHouse/infrastructure/server"
-	"DaisyClubHouse/infrastructure/server/middleware"
+	"DaisyClubHouse/infrastructure/server/handler"
 	"DaisyClubHouse/infrastructure/ws"
 	"go.uber.org/fx"
 )
@@ -11,10 +11,10 @@ import (
 func main() {
 	app := fx.New(
 		// game
+		fx.Provide(handler.NewHttpServerHandler),
 		fx.Provide(manager.NewGameManagerInstance),
 		// server (http + ws)
 		fx.Provide(ws.WebsocketAdaptor),
-		fx.Provide(middleware.Authorization),
 		fx.Invoke(server.HttpServer),
 	)
 	app.Run()

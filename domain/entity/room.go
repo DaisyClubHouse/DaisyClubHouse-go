@@ -11,10 +11,11 @@ import (
 
 // RoomProfile 房间概要信息
 type RoomProfile struct {
-	ID         string    // 房间唯一ID
-	Title      string    // 房间名称
-	Status     Status    // 房间状态
-	CreateTime time.Time // 创建时间
+	ID         string    `json:"id"`         // 房间唯一ID
+	Title      string    `json:"title"`      // 房间名称
+	Status     Status    `json:"status"`     // 房间状态
+	Creator    *UserInfo `json:"creator"`    // 房主信息
+	CreateTime time.Time `json:"createTime"` // 创建时间
 }
 
 // Room 房间
