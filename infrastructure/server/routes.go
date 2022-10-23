@@ -35,6 +35,7 @@ func RegisterRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware, handler
 		api.GET("/hello", helloHandler)
 
 		api.GET("/game/room/list", handler.GetRoomProfileListHandler())
+		api.POST("/game/room/create", handler.CreateRoom())
 
 	}
 }

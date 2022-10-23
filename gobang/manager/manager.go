@@ -36,13 +36,7 @@ func NewGameManagerInstance() *GameManager {
 				playerRoomMapping: make(map[string]string),
 			}
 
-			err := bus.Subscribe(event.ApplyForCreatingRoom, chessboard.eventApplyForCreatingRoom)
-			if err != nil {
-				log.Fatalf("Subscribe error: %v\n", err)
-				return nil
-			}
-
-			err = bus.Subscribe(event.ApplyForJoiningRoom, chessboard.eventApplyForJoiningRoom)
+			err := bus.Subscribe(event.ApplyForJoiningRoom, chessboard.eventApplyForJoiningRoom)
 			if err != nil {
 				log.Fatalf("Subscribe error: %v\n", err)
 				return nil
@@ -60,27 +54,6 @@ func NewGameManagerInstance() *GameManager {
 	log.Println("初始化GameManager")
 
 	return gm
-}
-
-// 创建房间处理事件
-func (b *GameManager) eventApplyForCreatingRoom(event *event.CreateRoomEvent) {
-	log.Printf("eventApplyForCreatingRoom: %v\n", event)
-	b.lock.Lock()
-	defer b.lock.Unlock()
-
-	client := b.clients[event.PlayerID]
-
-	newRoom := entity.CreateNewRoom(client)
-	b.rooms[newRoom.ID] = newRoom
-
-	// 生成随机code映射
-	code := utils.GenerateSixFigure()
-	b.codeRoomMapping[code] = newRoom.ID
-
-	// 生成玩家房间映射
-	b.playerRoomMapping[client.ID] = newRoom.ID
-
-	log.Printf("【创建新房间】code: %s, roomID: %s\n", code, newRoom.ID)
 }
 
 // 加入房间处理事件
@@ -143,4 +116,22 @@ func (b *GameManager) RoomProfileList() []entity.RoomProfile {
 		profileList = append(profileList, room.RoomProfile)
 	}
 	return profileList
+}
+
+// CreateRoom 创建房间
+func (b *GameManager) CreateRoom(user *entity.UserInfo) (*entity.RoomProfile, error) {
+	log.Printf("CreateRoom: %v\n", user)
+	b.lock.Lock()
+	defer b.lock.Unlock()
+
+	newRoom := entity.CreateNewRoom(user)
+	b.rooms[newRoom.ID] = newRoom
+
+	// 生成随机code映射
+	code := utils.GenerateSixFigure()
+	b.codeRoomMapping[code] = newRoom.ID
+
+	log.Printf("【创建新房间】code: %s, roomID: %s\n", code, newRoom.ID)
+
+	return &newRoom.RoomProfile, nil
 }

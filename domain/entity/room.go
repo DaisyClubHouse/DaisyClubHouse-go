@@ -41,15 +41,17 @@ const (
 )
 
 // CreateNewRoom 创建新房间
-func CreateNewRoom(owner *Client) *Room {
+func CreateNewRoom(owner *UserInfo) *Room {
 	profile := RoomProfile{
 		ID:         utils.GenerateRandomID(),
+		Title:      owner.Username + "的房间",
 		Status:     Status_Waiting,
+		Creator:    owner,
 		CreateTime: time.Now(),
 	}
 	room := &Room{
 		RoomProfile: profile,
-		Owner:       owner,
+		Owner:       nil,
 		Player:      nil,
 		lock:        sync.Mutex{},
 		whoseTurn:   nil,
@@ -59,8 +61,6 @@ func CreateNewRoom(owner *Client) *Room {
 		blackMatrix: NewChessMatrix(15),
 	}
 
-	log.Printf("NewRoom[%s] Created by Player(%s::%v)\n",
-		room.ID, room.Owner.ID, room.Owner.RemoteAddr())
 	return room
 }
 
