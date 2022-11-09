@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/event"
 	"DaisyClubHouse/gobang/msg"
 	"DaisyClubHouse/utils"
@@ -18,9 +19,10 @@ type Client struct {
 	ID   string
 	conn *websocket.Conn
 
-	send  chan []byte
-	close chan struct{}
-	bus   EventBus.Bus
+	send     chan []byte
+	close    chan struct{}
+	bus      EventBus.Bus
+	Identity *entity.UserInfo // 认证身份信息
 }
 
 func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Client {
@@ -49,15 +51,15 @@ func (client *Client) Run() {
 
 	slog.Info("客户端已连接", slog.String("client_id", client.ID), slog.Any("addr", client.conn.RemoteAddr()))
 
-	go client.writePump()
-	client.readPump()
+	go client.writePumpLoop()
+	client.readPumpLoop()
 }
 
 func (client *Client) RemoteAddr() net.Addr {
 	return client.conn.RemoteAddr()
 }
 
-func (client *Client) readPump() {
+func (client *Client) readPumpLoop() {
 	defer func() {
 		client.conn.Close()
 	}()
@@ -135,7 +137,7 @@ func (client *Client) readPump() {
 	}
 }
 
-func (client *Client) writePump() {
+func (client *Client) writePumpLoop() {
 	defer func() {
 		client.conn.Close()
 	}()
