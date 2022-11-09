@@ -1,25 +1,30 @@
 package middleware
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slog"
 )
 
 // Logger HTTP日志
 func Logger() gin.HandlerFunc {
-	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
-			param.ClientIP,
-			param.TimeStamp.Format(time.RFC1123),
-			param.Method,
-			param.Path,
-			param.Request.Proto,
-			param.StatusCode,
-			param.Latency,
-			param.Request.UserAgent(),
-			param.ErrorMessage,
+	return func(c *gin.Context) {
+		startTime := time.Now()
+
+		slog.Info("Request received",
+			slog.String("client_ip", c.ClientIP()),
+			slog.String("proto", c.Request.Proto),
+			slog.String("method", c.Request.Method),
+			slog.String("path", c.Request.URL.Path),
 		)
-	})
+		c.Next()
+
+		slog.Info("Response completed",
+			slog.String("client_ip", c.ClientIP()),
+			slog.String("path", c.Request.URL.Path),
+			slog.Int("status", c.Writer.Status()),
+			slog.Duration("latency", time.Since(startTime)),
+		)
+	}
 }

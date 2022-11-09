@@ -66,10 +66,10 @@ func (client *Client) readPump() {
 		mt, message, err := client.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("[error] Client Closed: %v", err)
+				slog.Warn("链接已断开", slog.String("client_id", client.ID))
 				break
 			}
-			log.Printf("read message error: %v", err)
+			slog.Error("读取消息失败", err, slog.String("client_id", client.ID))
 			break
 		}
 
@@ -146,8 +146,7 @@ func (client *Client) writePump() {
 		select {
 		case message, ok := <-client.send:
 			if !ok {
-				log.Println("[error] 发送信息出错，关闭连接")
-				client.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				slog.Warn("链接已关闭", slog.String("client_id", client.ID), slog.Any("addr", client.conn.RemoteAddr()))
 				return
 			}
 
