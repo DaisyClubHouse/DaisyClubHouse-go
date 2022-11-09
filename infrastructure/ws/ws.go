@@ -30,20 +30,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request, game *manager.GameManager
 	client := player.GeneratePlayerClient(ws, game.Bus)
 	game.Connect(client)
 	client.Run()
-
-	/*
-		for {
-			// 读取ws中的数据
-			mt, message, err := ws.ReadMessage()
-			if err != nil {
-				break
-			}
-			log.Printf("[message] New message from %s {type: %d, msg: %s}", ws.RemoteAddr(), mt, string(message))
-			if string(message) == "ping" {
-				message = []byte("pong")
-			}
-		}
-	*/
 }
 
 func WebsocketAdaptor(game *manager.GameManager) gin.HandlerFunc {

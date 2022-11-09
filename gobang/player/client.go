@@ -1,13 +1,11 @@
 package player
 
 import (
-	"encoding/json"
 	"log"
 	"net"
 	"time"
 
 	"DaisyClubHouse/domain/entity"
-	"DaisyClubHouse/gobang/event"
 	"DaisyClubHouse/gobang/msg"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
@@ -88,44 +86,11 @@ func (client *Client) readPumpLoop() {
 				slog.Error("消息解析失败", err)
 				return
 			}
-			switch kind {
-			case msg.KindCreateRoomRequest:
-				var req msg.CreateRoomRequest
-				if err := json.Unmarshal(payload, &req); err != nil {
-					slog.Error("消息反序列化失败", err, slog.String("payload", string(payload)))
-					return
-				}
 
-				evt := event.CreateRoomEvent{
-					PlayerID:  client.ID,
-					RoomTitle: req.RoomTitle,
-				}
-				client.bus.Publish(event.ApplyForCreatingRoom, &evt)
-			case msg.KindJoinRoomRequest:
-				var req msg.JoinRoomRequest
-				if err := json.Unmarshal(payload, &req); err != nil {
-					slog.Error("消息反序列化失败", err, slog.String("payload", string(payload)))
-					return
-				}
-
-				evt := event.JoinRoomEvent{
-					PlayerID: client.ID,
-					RoomCode: req.ShortCode,
-				}
-				client.bus.Publish(event.ApplyForJoiningRoom, &evt)
-			case msg.KindPlaceThePieceRequest:
-				var req msg.PlaceThePieceRequest
-				if err := json.Unmarshal(payload, &req); err != nil {
-					slog.Error("消息反序列化失败", err, slog.String("payload", string(payload)))
-					return
-				}
-				evt := event.PlaceThePieceEvent{
-					PlayerID: client.ID,
-					X:        req.X,
-					Y:        req.Y,
-				}
-				client.bus.Publish(event.ApplyPlaceThePiece, &evt)
-			default:
+			handlerMap := eventHandleDispatcher()
+			if handler, ok := handlerMap[kind]; ok {
+				handler(client, payload)
+			} else {
 				slog.Warn("Unknown message, DISCARD!",
 					slog.String("client_id", client.ID),
 					slog.Any("addr", client.conn.RemoteAddr()),

@@ -27,7 +27,6 @@ func RegisterRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware, handler
 		})
 	})
 
-	// api
 	// api := r.Group("/api", authMiddleware.MiddlewareFunc())
 	api := r.Group("/api")
 	{
@@ -36,7 +35,6 @@ func RegisterRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware, handler
 
 		api.GET("/game/room/list", handler.GetRoomProfileListHandler())
 		api.POST("/game/room/create", handler.CreateRoom())
-
 	}
 }
 
