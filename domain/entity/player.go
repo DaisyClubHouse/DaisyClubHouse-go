@@ -35,15 +35,19 @@ func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Client {
 
 func (client *Client) Run() {
 	client.conn.SetCloseHandler(func(code int, text string) error {
-		log.Printf("[close] 客户端[%v]断开了连接(code:%d,text:%s)",
-			client.conn.RemoteAddr(), code, text)
+		slog.Info("客户端断开连接",
+			slog.String("client_id", client.ID),
+			slog.Any("addr", client.conn.RemoteAddr()),
+			slog.Int("code", code),
+			slog.String("text", text))
+
 		// 关闭通道
 		close(client.close)
 		close(client.send)
 		return nil
 	})
 
-	log.Printf("[info] 客户端[%v]已连接", client.conn.RemoteAddr())
+	slog.Info("客户端已连接", slog.String("client_id", client.ID), slog.Any("addr", client.conn.RemoteAddr()))
 
 	go client.writePump()
 	client.readPump()
@@ -71,7 +75,7 @@ func (client *Client) readPump() {
 
 		slog.Info("receive message",
 			slog.String("client_id", client.ID),
-			slog.String("addr", client.conn.RemoteAddr().String()),
+			slog.Any("addr", client.conn.RemoteAddr()),
 			slog.Int("mType", mt),
 			slog.String("msg", string(message)),
 		)
@@ -86,7 +90,7 @@ func (client *Client) readPump() {
 			case msg.KindCreateRoomRequest:
 				var req msg.CreateRoomRequest
 				if err := json.Unmarshal(payload, &req); err != nil {
-					log.Printf("[error] json.Unmarshal: %v", err)
+					slog.Error("消息反序列化失败", err, slog.String("payload", string(payload)))
 					return
 				}
 
@@ -98,7 +102,7 @@ func (client *Client) readPump() {
 			case msg.KindJoinRoomRequest:
 				var req msg.JoinRoomRequest
 				if err := json.Unmarshal(payload, &req); err != nil {
-					log.Printf("[error] json.Unmarshal: %v", err)
+					slog.Error("消息反序列化失败", err, slog.String("payload", string(payload)))
 					return
 				}
 
@@ -110,7 +114,7 @@ func (client *Client) readPump() {
 			case msg.KindPlaceThePieceRequest:
 				var req msg.PlaceThePieceRequest
 				if err := json.Unmarshal(payload, &req); err != nil {
-					log.Printf("[error] json.Unmarshal: %v", err)
+					slog.Error("消息反序列化失败", err, slog.String("payload", string(payload)))
 					return
 				}
 				evt := event.PlaceThePieceEvent{
@@ -120,7 +124,12 @@ func (client *Client) readPump() {
 				}
 				client.bus.Publish(event.ApplyPlaceThePiece, &evt)
 			default:
-				log.Println("Unknown message")
+				slog.Warn("Unknown message, DISCARD!",
+					slog.String("client_id", client.ID),
+					slog.Any("addr", client.conn.RemoteAddr()),
+					slog.Any("kind", kind),
+					slog.String("payload", string(payload)),
+				)
 			}
 		}
 	}
@@ -171,32 +180,3 @@ func (client *Client) SendRawMessage(raw []byte) {
 	log.Printf("[send to %s] address:%s, lens:%d", client.ID, client.RemoteAddr(), len(raw))
 	client.send <- raw
 }
-
-// ApplyForCreatingRoom 发送创建房间请求
-// func (client *Client) ApplyForCreatingRoom() error {
-// 	req := pb.CreateRoomRequest{
-// 		RoomTitle: "test1",
-// 	}
-// 	bytes, err := proto.Marshal(&req)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	msgPack := pb.UserMsgPack{
-// 		Kind: pb.MsgKind_MsgCreateRoomRequest,
-// 		Data: bytes,
-// 	}
-//
-// 	raw, err := proto.Marshal(&msgPack)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	client.sendRawMessage(raw)
-// 	return nil
-// }
-//
-// // ApplyForJoiningRoom 发送加入房间请求
-// func (client *Client) ApplyForJoiningRoom() error {
-//
-// }
