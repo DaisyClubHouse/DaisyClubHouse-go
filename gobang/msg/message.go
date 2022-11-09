@@ -19,12 +19,10 @@ type Kind int
 
 const (
 	KindUnknown               Kind = iota // 未知消息
-	KindCreateRoomRequest                 // 请求创建房间
-	KindCreateRoomResponse                //
-	KindJoinRoomRequest                   // 请求加入房间
-	KindJoinRoomResponse                  //
-	KindPlaceThePieceRequest              // 请求下棋
-	KindPlaceThePieceResponse             //
+	KindJoinRoomRequest            = 10   // 请求加入房间
+	KindJoinRoomResponse           = 11   //
+	KindPlaceThePieceRequest       = 20   // 请求下棋
+	KindPlaceThePieceResponse      = 21   //
 )
 const (
 	KindBroadcastRoomGameBeginning   Kind = iota + 100 // 广播游戏开始 100
