@@ -16,7 +16,7 @@ func RegisterRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware, handler
 			"message": "success!",
 		})
 	})
-	r.POST("/login", authMiddleware.LoginHandler)
+	// r.POST("/login", authMiddleware.LoginHandler)
 
 	r.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
 		claims := jwt.ExtractClaims(c)
@@ -27,21 +27,10 @@ func RegisterRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware, handler
 		})
 	})
 
-	// api := r.Group("/api", authMiddleware.MiddlewareFunc())
 	api := r.Group("/api")
 	{
 		api.GET("/refresh_token", authMiddleware.RefreshHandler)
-		api.GET("/hello", helloHandler)
-
 		api.GET("/game/room/list", handler.GetRoomProfileListHandler())
 		api.POST("/game/room/create", handler.CreateRoom())
 	}
-}
-
-func helloHandler(c *gin.Context) {
-	claims := jwt.ExtractClaims(c)
-	log.Println(claims)
-	c.JSON(200, gin.H{
-		"hello": "world",
-	})
 }
