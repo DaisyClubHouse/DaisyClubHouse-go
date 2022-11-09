@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/manager"
+	"DaisyClubHouse/gobang/player"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -27,7 +27,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, game *manager.GameManager
 	defer ws.Close()
 
 	// 初始化玩家长链接
-	client := entity.GeneratePlayerClient(ws, game.Bus)
+	client := player.GeneratePlayerClient(ws, game.Bus)
 	game.Connect(client)
 	client.Run()
 

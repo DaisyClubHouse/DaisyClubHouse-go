@@ -6,15 +6,17 @@ import (
 
 	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/event"
+	"DaisyClubHouse/gobang/player"
+	"DaisyClubHouse/gobang/room"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
 )
 
 type GameManager struct {
-	clients           map[string]*entity.Client
+	clients           map[string]*player.Client
 	lock              sync.RWMutex
 	Bus               EventBus.Bus
-	rooms             map[string]*entity.Room
+	rooms             map[string]*room.Room
 	codeRoomMapping   map[string]string // code -> roomID
 	playerRoomMapping map[string]string // playerID -> roomID
 }
@@ -28,10 +30,10 @@ func NewGameManagerInstance() *GameManager {
 		gm = func() *GameManager {
 			bus := EventBus.New()
 			chessboard := GameManager{
-				clients:           make(map[string]*entity.Client),
+				clients:           make(map[string]*player.Client),
 				lock:              sync.RWMutex{},
 				Bus:               bus,
-				rooms:             make(map[string]*entity.Room),
+				rooms:             make(map[string]*room.Room),
 				codeRoomMapping:   make(map[string]string),
 				playerRoomMapping: make(map[string]string),
 			}
@@ -95,7 +97,7 @@ func (b *GameManager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
 }
 
 // Connect 连接到新客户端
-func (b *GameManager) Connect(client *entity.Client) {
+func (b *GameManager) Connect(client *player.Client) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
@@ -103,7 +105,7 @@ func (b *GameManager) Connect(client *entity.Client) {
 }
 
 // Disconnect 客户端断开连接
-func (b *GameManager) Disconnect(client *entity.Client) {
+func (b *GameManager) Disconnect(client *player.Client) {
 	log.Println("Disconnect")
 	b.lock.Lock()
 	defer b.lock.Unlock()
@@ -112,8 +114,8 @@ func (b *GameManager) Disconnect(client *entity.Client) {
 }
 
 // RoomProfileList 查询房间简要信息列表
-func (b *GameManager) RoomProfileList() []entity.RoomProfile {
-	profileList := make([]entity.RoomProfile, 0, len(b.rooms))
+func (b *GameManager) RoomProfileList() []room.RoomProfile {
+	profileList := make([]room.RoomProfile, 0, len(b.rooms))
 	for _, room := range b.rooms {
 		profileList = append(profileList, room.RoomProfile)
 	}
@@ -121,12 +123,12 @@ func (b *GameManager) RoomProfileList() []entity.RoomProfile {
 }
 
 // CreateRoom 创建房间
-func (b *GameManager) CreateRoom(user *entity.UserInfo) (*entity.RoomProfile, error) {
+func (b *GameManager) CreateRoom(user *entity.UserInfo) (*room.RoomProfile, error) {
 	log.Printf("CreateRoom: %v\n", user)
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
-	newRoom := entity.CreateNewRoom(user)
+	newRoom := room.CreateNewRoom(user)
 	b.rooms[newRoom.ID] = newRoom
 
 	// 生成随机code映射

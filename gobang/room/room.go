@@ -1,35 +1,37 @@
-package entity
+package room
 
 import (
 	"log"
 	"sync"
 	"time"
 
+	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/msg"
+	"DaisyClubHouse/gobang/player"
 	"DaisyClubHouse/utils"
 )
 
 // RoomProfile 房间概要信息
 type RoomProfile struct {
-	ID         string    `json:"id"`         // 房间唯一ID
-	Title      string    `json:"title"`      // 房间名称
-	Status     Status    `json:"status"`     // 房间状态
-	Creator    *UserInfo `json:"creator"`    // 房主信息
-	CreateTime time.Time `json:"createTime"` // 创建时间
+	ID         string           `json:"id"`         // 房间唯一ID
+	Title      string           `json:"title"`      // 房间名称
+	Status     Status           `json:"status"`     // 房间状态
+	Creator    *entity.UserInfo `json:"creator"`    // 房主信息
+	CreateTime time.Time        `json:"createTime"` // 创建时间
 }
 
 // Room 房间
 type Room struct {
 	RoomProfile // 房间概要信息
 
-	Owner       *Client
-	Player      *Client
+	Owner       *player.Client
+	Player      *player.Client
 	lock        sync.Mutex
-	whoseTurn   *Client
-	whiteHolder *Client      // 执白棋的玩家（先行）
-	blackHolder *Client      // 执黑棋的玩家（后行）
-	whiteMatrix *ChessMatrix // 白棋的棋盘
-	blackMatrix *ChessMatrix // 黑棋的棋盘
+	whoseTurn   *player.Client
+	whiteHolder *player.Client      // 执白棋的玩家（先行）
+	blackHolder *player.Client      // 执黑棋的玩家（后行）
+	whiteMatrix *entity.ChessMatrix // 白棋的棋盘
+	blackMatrix *entity.ChessMatrix // 黑棋的棋盘
 }
 
 type Status int
@@ -41,7 +43,7 @@ const (
 )
 
 // CreateNewRoom 创建新房间
-func CreateNewRoom(owner *UserInfo) *Room {
+func CreateNewRoom(owner *entity.UserInfo) *Room {
 	profile := RoomProfile{
 		ID:         utils.GenerateRandomID(),
 		Title:      owner.Username + "的房间",
@@ -57,14 +59,14 @@ func CreateNewRoom(owner *UserInfo) *Room {
 		whoseTurn:   nil,
 		whiteHolder: nil,
 		blackHolder: nil,
-		whiteMatrix: NewChessMatrix(15),
-		blackMatrix: NewChessMatrix(15),
+		whiteMatrix: entity.NewChessMatrix(15),
+		blackMatrix: entity.NewChessMatrix(15),
 	}
 
 	return room
 }
 
-func (room *Room) PlayerJoin(player *Client) {
+func (room *Room) PlayerJoin(player *player.Client) {
 	room.lock.Lock()
 	defer room.lock.Unlock()
 
