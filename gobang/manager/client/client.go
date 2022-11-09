@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"DaisyClubHouse/gobang/player"
+	"DaisyClubHouse/gobang/manager/player"
 )
 
 type PlayerClientManager struct {

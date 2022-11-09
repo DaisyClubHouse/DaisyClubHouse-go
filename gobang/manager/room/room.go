@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"DaisyClubHouse/domain/entity"
+	"DaisyClubHouse/gobang/manager/player"
 	"DaisyClubHouse/gobang/msg"
-	"DaisyClubHouse/gobang/player"
 	"DaisyClubHouse/utils"
 	"golang.org/x/exp/slog"
 )

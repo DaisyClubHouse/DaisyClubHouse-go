@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"DaisyClubHouse/gobang/manager/game"
-	"DaisyClubHouse/gobang/player"
+	"DaisyClubHouse/gobang/manager/player"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
