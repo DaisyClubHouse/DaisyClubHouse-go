@@ -9,8 +9,8 @@ type CreateRoomResponse struct {
 }
 
 type JoinRoomRequest struct {
-	UserID string `json:"user_id"` // 玩家ID
-	RoomID string `json:"room_id"` // 房间ID
+	PlayerID string `json:"player_id"` // 玩家ID
+	RoomID   string `json:"room_id"`   // 房间ID
 }
 
 type JoinRoomResponse struct {
