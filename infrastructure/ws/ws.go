@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/manager"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -25,28 +26,24 @@ func wsHandler(w http.ResponseWriter, r *http.Request, game *manager.GameManager
 	}
 	defer ws.Close()
 
-	log.Printf("%s connected\n", ws.RemoteAddr())
-	for {
-		// 读取ws中的数据
-		mt, message, err := ws.ReadMessage()
-		if err != nil {
-			break
-		}
-		if string(message) == "ping" {
-			message = []byte("pong")
-		}
-		// 写入ws数据
-		err = ws.WriteMessage(mt, message)
-		if err != nil {
-			break
-		}
-	}
+	// 初始化玩家长链接
+	client := entity.GeneratePlayerClient(ws, game.Bus)
+	game.Connect(client)
+	client.Run()
 
-	// 初始化玩家客户端
-	// client := player.NewPlayerClient(ws, game.Bus)
-	// game.ClientConnected(client)
-	//
-	// client.Run()
+	/*
+		for {
+			// 读取ws中的数据
+			mt, message, err := ws.ReadMessage()
+			if err != nil {
+				break
+			}
+			log.Printf("[message] New message from %s {type: %d, msg: %s}", ws.RemoteAddr(), mt, string(message))
+			if string(message) == "ping" {
+				message = []byte("pong")
+			}
+		}
+	*/
 }
 
 func WebsocketAdaptor(game *manager.GameManager) gin.HandlerFunc {

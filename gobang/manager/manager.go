@@ -94,15 +94,17 @@ func (b *GameManager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
 	log.Println(result)
 }
 
-func (b *GameManager) ClientConnected(client *entity.Client) {
+// Connect 连接到新客户端
+func (b *GameManager) Connect(client *entity.Client) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
 	b.clients[client.ID] = client
 }
 
-func (b *GameManager) ClientDisconnected(client *entity.Client) {
-	log.Println("ClientDisconnected")
+// Disconnect 客户端断开连接
+func (b *GameManager) Disconnect(client *entity.Client) {
+	log.Println("Disconnect")
 	b.lock.Lock()
 	defer b.lock.Unlock()
 

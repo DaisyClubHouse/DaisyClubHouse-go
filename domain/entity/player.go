@@ -11,6 +11,7 @@ import (
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
 	"github.com/gorilla/websocket"
+	"golang.org/x/exp/slog"
 )
 
 type Client struct {
@@ -22,7 +23,7 @@ type Client struct {
 	bus   EventBus.Bus
 }
 
-func NewPlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Client {
+func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Client {
 	return &Client{
 		ID:    utils.GenerateRandomID(),
 		conn:  conn,
@@ -42,8 +43,10 @@ func (client *Client) Run() {
 		return nil
 	})
 
+	log.Printf("[info] 客户端[%v]已连接", client.conn.RemoteAddr())
+
 	go client.writePump()
-	go client.readPump()
+	client.readPump()
 }
 
 func (client *Client) RemoteAddr() net.Addr {
@@ -66,12 +69,17 @@ func (client *Client) readPump() {
 			break
 		}
 
-		log.Printf("[recv from %s]: (t: %d, lens:%d) - %s",
-			client.conn.RemoteAddr(), mt, len(message), message)
+		slog.Info("receive message",
+			slog.String("client_id", client.ID),
+			slog.String("addr", client.conn.RemoteAddr().String()),
+			slog.Int("mType", mt),
+			slog.String("msg", string(message)),
+		)
 
 		if mt == websocket.TextMessage {
 			kind, payload, err := msg.Parsing(message)
 			if err != nil {
+				slog.Error("消息解析失败", err)
 				return
 			}
 			switch kind {
@@ -111,6 +119,8 @@ func (client *Client) readPump() {
 					Y:        req.Y,
 				}
 				client.bus.Publish(event.ApplyPlaceThePiece, &evt)
+			default:
+				log.Println("Unknown message")
 			}
 		}
 	}
