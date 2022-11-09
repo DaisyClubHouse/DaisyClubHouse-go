@@ -1,4 +1,4 @@
-package manager
+package game
 
 import (
 	"log"
@@ -6,14 +6,16 @@ import (
 
 	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/event"
+	"DaisyClubHouse/gobang/manager/client"
 	"DaisyClubHouse/gobang/player"
 	"DaisyClubHouse/gobang/room"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
+	"golang.org/x/exp/slog"
 )
 
 type GameManager struct {
-	clients           map[string]*player.Client
+	clientManager     *client.PlayerClientManager
 	lock              sync.RWMutex
 	Bus               EventBus.Bus
 	rooms             map[string]*room.Room
@@ -23,14 +25,14 @@ type GameManager struct {
 
 var once sync.Once
 
-func NewGameManagerInstance() *GameManager {
+func NewGameManagerInstance(clientManager *client.PlayerClientManager) *GameManager {
 	var gm *GameManager
 
 	once.Do(func() {
 		gm = func() *GameManager {
 			bus := EventBus.New()
 			chessboard := GameManager{
-				clients:           make(map[string]*player.Client),
+				clientManager:     clientManager,
 				lock:              sync.RWMutex{},
 				Bus:               bus,
 				rooms:             make(map[string]*room.Room),
@@ -64,20 +66,29 @@ func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
-	roomId, ok := b.codeRoomMapping[e.RoomCode]
+	roomId, ok := b.codeRoomMapping[e.RoomID]
 	if !ok {
-		log.Printf("通知玩家未找到房间")
-		log.Println(b.codeRoomMapping)
+		slog.Warn("通知玩家未找到房间", slog.String("room_id", e.RoomID))
 		return
 	}
 
-	client := b.clients[e.PlayerID]
 	targetRoom := b.rooms[roomId]
-	// 玩家加入
-	targetRoom.PlayerJoin(client)
 
+	slog.Info("查找到房间",
+		slog.String("room_id", targetRoom.ID),
+		slog.String("title", targetRoom.Title),
+	)
+
+	playerC, err := b.clientManager.GetClientByPlayerID(e.PlayerID)
+	if err != nil {
+		slog.Error("未找到玩家", err, slog.String("player_id", e.PlayerID))
+		return
+	}
 	// 生成玩家房间映射
-	b.playerRoomMapping[client.ID] = roomId
+	b.playerRoomMapping[playerC.ID] = roomId
+
+	// 玩家加入房间
+	targetRoom.PlayerJoin(e.PlayerID, playerC)
 }
 
 // 在棋盘上落子处理事件
@@ -98,19 +109,12 @@ func (b *GameManager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
 
 // Connect 连接到新客户端
 func (b *GameManager) Connect(client *player.Client) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-
-	b.clients[client.ID] = client
+	b.clientManager.ClientConnected(client)
 }
 
 // Disconnect 客户端断开连接
 func (b *GameManager) Disconnect(client *player.Client) {
-	log.Println("Disconnect")
-	b.lock.Lock()
-	defer b.lock.Unlock()
-
-	delete(b.clients, client.ID)
+	b.clientManager.ClientDisconnected(client.ID)
 }
 
 // RoomProfileList 查询房间简要信息列表

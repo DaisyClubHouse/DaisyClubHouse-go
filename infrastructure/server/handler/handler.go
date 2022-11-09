@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"DaisyClubHouse/domain/entity"
-	"DaisyClubHouse/gobang/manager"
+	"DaisyClubHouse/gobang/manager/game"
 	"github.com/gin-gonic/gin"
 )
 
 type HttpServerHandler struct {
-	game *manager.GameManager
+	game *game.GameManager
 }
 
-func NewHttpServerHandler(game *manager.GameManager) *HttpServerHandler {
+func NewHttpServerHandler(game *game.GameManager) *HttpServerHandler {
 	return &HttpServerHandler{game: game}
 }
 

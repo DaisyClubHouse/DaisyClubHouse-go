@@ -1,7 +1,8 @@
 package main
 
 import (
-	"DaisyClubHouse/gobang/manager"
+	"DaisyClubHouse/gobang/manager/client"
+	"DaisyClubHouse/gobang/manager/game"
 	"DaisyClubHouse/infrastructure/server"
 	"DaisyClubHouse/infrastructure/server/handler"
 	"DaisyClubHouse/infrastructure/ws"
@@ -12,7 +13,8 @@ func main() {
 	app := fx.New(
 		// game
 		fx.Provide(handler.NewHttpServerHandler),
-		fx.Provide(manager.NewGameManagerInstance),
+		fx.Provide(game.NewGameManagerInstance),
+		fx.Provide(client.PlayerClientManagerProvider),
 		// server (http + ws)
 		fx.Provide(ws.WebsocketAdaptor),
 		fx.Invoke(server.HttpServer),

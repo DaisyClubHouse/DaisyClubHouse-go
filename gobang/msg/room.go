@@ -9,7 +9,8 @@ type CreateRoomResponse struct {
 }
 
 type JoinRoomRequest struct {
-	ShortCode string `json:"short_code"` // 房间短码
+	UserID string `json:"user_id"` // 玩家ID
+	RoomID string `json:"room_id"` // 房间ID
 }
 
 type JoinRoomResponse struct {

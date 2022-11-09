@@ -10,7 +10,7 @@ import (
 
 func eventHandleDispatcher() map[msg.Kind]func(*Client, []byte) {
 	handlers := map[msg.Kind]func(*Client, []byte){
-		msg.KindCreateRoomRequest:    handleCreateRoomRequest,
+		// msg.KindCreateRoomRequest:    handleCreateRoomRequest,
 		msg.KindJoinRoomRequest:      handleJoinRoomRequest,
 		msg.KindPlaceThePieceRequest: handlePlaceThePieceRequest,
 	}
@@ -42,8 +42,9 @@ func handleJoinRoomRequest(client *Client, payload []byte) {
 	}
 
 	evt := event.JoinRoomEvent{
-		PlayerID: client.ID,
-		RoomCode: req.ShortCode,
+		PlayerID: req.UserID,
+		ClientID: client.ID,
+		RoomID:   req.RoomID,
 	}
 	client.bus.Publish(event.ApplyForJoiningRoom, &evt)
 }

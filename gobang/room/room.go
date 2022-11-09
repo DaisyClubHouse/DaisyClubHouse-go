@@ -9,6 +9,7 @@ import (
 	"DaisyClubHouse/gobang/msg"
 	"DaisyClubHouse/gobang/player"
 	"DaisyClubHouse/utils"
+	"golang.org/x/exp/slog"
 )
 
 // RoomProfile 房间概要信息
@@ -66,15 +67,31 @@ func CreateNewRoom(owner *entity.UserInfo) *Room {
 	return room
 }
 
-func (room *Room) PlayerJoin(player *player.Client) {
+func (room *Room) PlayerJoin(playerID string, client *player.Client) {
 	room.lock.Lock()
 	defer room.lock.Unlock()
 
-	room.Player = player
-	log.Printf("Player[%s] Joined Room[%s]\n", player.ID, room.ID)
+	if room.RoomProfile.Creator.ID == playerID {
+		// 房主
+		room.Owner = client
+		slog.Info("房主客户端连接上房间",
+			slog.String("room_id", room.ID),
+			slog.String("player_id", playerID),
+			slog.String("client_id", client.ID),
+		)
+	} else {
+		room.Player = client
+		slog.Info("玩家客户端连接上房间",
+			slog.String("room_id", room.ID),
+			slog.String("player_id", playerID),
+			slog.String("client_id", client.ID),
+		)
+	}
 
 	// 状态流转
-	go room.gameBegin()
+	if room.Owner != nil && room.Player != nil {
+		go room.gameBegin()
+	}
 }
 
 func (room *Room) OwnerHold() string {
