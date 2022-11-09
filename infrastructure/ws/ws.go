@@ -26,7 +26,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, game *game.GameManager) {
 	}
 	defer ws.Close()
 
-	// 初始化玩家长链接
+	// 初始化玩家ws
 	client := player.GeneratePlayerClient(ws, game.Bus)
 	game.Connect(client)
 	client.Run()

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"DaisyClubHouse/gobang/manager/player"
+	"golang.org/x/exp/slog"
 )
 
 type PlayerClientManager struct {
@@ -20,14 +21,17 @@ func PlayerClientManagerProvider() *PlayerClientManager {
 
 func (m *PlayerClientManager) ClientConnected(client *player.Client) {
 	m.clients.Store(client.ID, client)
+	slog.Info("玩家客户端加入列表", slog.String("client_id", client.ID))
 }
 
 func (m *PlayerClientManager) ClientDisconnected(clientID string) {
 	m.clients.Delete(clientID)
+	slog.Info("玩家客户端离开列表", slog.String("client_id", clientID))
 }
 
 func (m *PlayerClientManager) AssociatedID(clientID, playerID string) {
 	m.idMap.Store(playerID, clientID)
+	slog.Info("玩家客户端ID关联", slog.String("player_id", playerID), slog.String("client_id", clientID))
 }
 
 func (m *PlayerClientManager) GetClientByClientID(clientID string) (*player.Client, error) {

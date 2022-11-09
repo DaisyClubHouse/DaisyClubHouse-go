@@ -9,7 +9,6 @@ import (
 	"DaisyClubHouse/gobang/manager/client"
 	"DaisyClubHouse/gobang/manager/player"
 	"DaisyClubHouse/gobang/manager/room"
-	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
 	"golang.org/x/exp/slog"
 )
@@ -19,7 +18,6 @@ type GameManager struct {
 	lock              sync.RWMutex
 	Bus               EventBus.Bus
 	rooms             map[string]*room.Room
-	codeRoomMapping   map[string]string // code -> roomID
 	playerRoomMapping map[string]string // playerID -> roomID
 }
 
@@ -36,7 +34,6 @@ func NewGameManagerInstance(clientManager *client.PlayerClientManager) *GameMana
 				lock:              sync.RWMutex{},
 				Bus:               bus,
 				rooms:             make(map[string]*room.Room),
-				codeRoomMapping:   make(map[string]string),
 				playerRoomMapping: make(map[string]string),
 			}
 
@@ -66,18 +63,18 @@ func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
-	roomId, ok := b.codeRoomMapping[e.RoomID]
+	targetRoom, ok := b.rooms[e.RoomID]
 	if !ok {
 		slog.Warn("通知玩家未找到房间", slog.String("room_id", e.RoomID))
 		return
 	}
 
-	targetRoom := b.rooms[roomId]
-
 	slog.Info("查找到房间",
 		slog.String("room_id", targetRoom.ID),
 		slog.String("title", targetRoom.Title),
 	)
+	// 建立playerID、clientID的关联
+	b.clientManager.AssociatedID(e.ClientID, e.PlayerID)
 
 	playerC, err := b.clientManager.GetClientByPlayerID(e.PlayerID)
 	if err != nil {
@@ -85,7 +82,7 @@ func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 		return
 	}
 	// 生成玩家房间映射
-	b.playerRoomMapping[playerC.ID] = roomId
+	b.playerRoomMapping[playerC.ID] = e.RoomID
 
 	// 玩家加入房间
 	targetRoom.PlayerJoin(e.PlayerID, playerC)
@@ -120,8 +117,8 @@ func (b *GameManager) Disconnect(client *player.Client) {
 // RoomProfileList 查询房间简要信息列表
 func (b *GameManager) RoomProfileList() []room.RoomProfile {
 	profileList := make([]room.RoomProfile, 0, len(b.rooms))
-	for _, room := range b.rooms {
-		profileList = append(profileList, room.RoomProfile)
+	for _, item := range b.rooms {
+		profileList = append(profileList, item.RoomProfile)
 	}
 	return profileList
 }
@@ -135,11 +132,7 @@ func (b *GameManager) CreateRoom(user *entity.UserInfo) (*room.RoomProfile, erro
 	newRoom := room.CreateNewRoom(user)
 	b.rooms[newRoom.ID] = newRoom
 
-	// 生成随机code映射
-	code := utils.GenerateSixFigure()
-	b.codeRoomMapping[code] = newRoom.ID
-
-	log.Printf("【创建新房间】code: %s, roomID: %s\n", code, newRoom.ID)
+	log.Printf("【创建新房间】roomID: %s\n", newRoom.ID)
 
 	return &newRoom.RoomProfile, nil
 }
