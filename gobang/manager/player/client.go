@@ -27,7 +27,7 @@ func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Client {
 	return &Client{
 		ID:    utils.GenerateRandomID(),
 		conn:  conn,
-		send:  make(chan []byte),
+		send:  make(chan []byte, 256),
 		close: make(chan struct{}),
 		bus:   bus,
 	}

@@ -35,6 +35,11 @@ type BroadcastGameBeginning struct {
 	BlackHolder *PlayerProfile `json:"black_holder"` // 黑棋所有者ID
 }
 
+type BroadcastPlayerAction struct {
+	RoomId    string         `json:"room_id"`    // 房间ID
+	WhoseTurn *PlayerProfile `json:"whose_turn"` // 操作玩家
+}
+
 type BroadcastPlayerPlaceThePiece struct {
 	RoomID     string `json:"room_id"`     // 房间ID
 	PlayerID   string `json:"player_id"`   // 玩家ID

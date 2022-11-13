@@ -25,8 +25,9 @@ const (
 	KindPlaceThePieceResponse      = 21   //
 )
 const (
-	KindBroadcastRoomGameBeginning   Kind = iota + 100 // 广播游戏开始 100
-	KindBroadcastPlayerPlaceThePiece                   // 广播玩家操作落子
+	KindBroadcastRoomGameBeginning   Kind = 100 // 广播游戏开始 100
+	KindBroadcastPlayerAction        Kind = 200 // 广播通知行动玩家 200
+	KindBroadcastPlayerPlaceThePiece Kind = 300 // 广播玩家操作落子 300
 )
 
 func Parsing(data []byte) (Kind, []byte, error) {

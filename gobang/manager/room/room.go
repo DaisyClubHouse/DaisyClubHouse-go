@@ -58,7 +58,6 @@ func CreateNewRoom(owner *entity.UserInfo) *Room {
 		RoomProfile: profile,
 		Owner:       nil,
 		Player:      nil,
-		lock:        sync.Mutex{},
 		whoseTurn:   nil,
 		whiteHolder: nil,
 		blackHolder: nil,
@@ -94,7 +93,7 @@ func (room *Room) PlayerJoin(playerInfo *entity.UserInfo, client *player.Client)
 
 	// 状态流转
 	if room.Owner != nil && room.Player != nil {
-		go room.gameBegin()
+		room.gameBegin()
 	}
 }
 
@@ -149,21 +148,16 @@ func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
 		Type: msg.KindBroadcastPlayerPlaceThePiece,
 		Payload: msg.BroadcastPlayerPlaceThePiece{
 			RoomID:     room.ID,
-			PlayerID:   playerID,
+			PlayerID:   room.whoseTurn.PlayerID(),
 			PieceWhite: room.whiteHolder.ID == room.whoseTurn.ID,
 			X:          x,
 			Y:          y,
 		},
 	}
 
-	// 切换回合
-	if room.whoseTurn == room.whiteHolder {
-		room.whoseTurn = room.blackHolder
-	} else {
-		room.whoseTurn = room.whiteHolder
-	}
-
 	go room.Broadcast(pack.Marshal())
+
+	go room.turnChanged(true)
 	return "OK"
 }
 
@@ -190,8 +184,8 @@ func (room *Room) gameBegin() {
 		room.PlayerHold(),
 		room.Player.ID, room.Player.RemoteAddr())
 
-	// TODO 通知执白执黑已经谁先行
-	room.whoseTurn = room.whiteHolder
+	// 初始化通知执白执黑已经谁先行
+	room.whoseTurn = room.blackHolder
 
 	pack := msg.UserPack[msg.BroadcastGameBeginning]{
 		Type: msg.KindBroadcastRoomGameBeginning,
@@ -202,31 +196,43 @@ func (room *Room) gameBegin() {
 		},
 	}
 	room.Broadcast(pack.Marshal())
+
+	room.turnChanged(false)
 }
 
-func (room *Room) turnChanged() {
-	room.lock.Lock()
-	defer room.lock.Unlock()
+func (room *Room) turnChanged(turn bool) {
+	slog.Info("回合变更", slog.Bool("turn", turn))
 
-	if room.whoseTurn == room.whiteHolder {
-		room.whoseTurn = room.blackHolder
-	} else {
-		room.whoseTurn = room.whiteHolder
+	if turn {
+		if room.whoseTurn == room.whiteHolder {
+			room.whoseTurn = room.blackHolder
+		} else {
+			room.whoseTurn = room.whiteHolder
+		}
 	}
+
+	pack := msg.UserPack[msg.BroadcastPlayerAction]{
+		Type: msg.KindBroadcastPlayerAction,
+		Payload: msg.BroadcastPlayerAction{
+			RoomId:    room.ID,
+			WhoseTurn: room.whoseTurn.PlayerProfile(),
+		},
+	}
+	room.Broadcast(pack.Marshal())
+
+	slog.Info("广播玩家行动", slog.Bool("turn", turn))
 }
 
 // Broadcast 房间内广播
 func (room *Room) Broadcast(data []byte) {
 	log.Printf("[广播] room:%s lens:%d", room.ID, len(data))
+	slog.Info("广播房间消息", slog.Any("data", string(data)))
 	if len(data) == 0 {
 		// 如果没有数据，则不发送
 		log.Println("------------------ERROR------------------")
 		log.Printf("[ERROR] Room[%s] Broadcast data is empty\n", room.ID)
 		return
 	}
-
-	room.lock.Lock()
-	defer room.lock.Unlock()
 
 	if room.Player != nil {
 		room.Player.SendRawMessage(data)
