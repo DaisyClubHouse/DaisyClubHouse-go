@@ -7,9 +7,10 @@ const (
 
 // JoinRoomEvent 加入房间事件
 type JoinRoomEvent struct {
-	PlayerID string // 玩家ID
-	ClientID string // 客户端ID
-	RoomID   string // 房间ID
+	PlayerID   string // 玩家ID
+	PlayerName string // 玩家姓名
+	ClientID   string // 客户端ID
+	RoomID     string // 房间ID
 }
 
 // PlaceThePieceEvent 在棋盘上落子事件

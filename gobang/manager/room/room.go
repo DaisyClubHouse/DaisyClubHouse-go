@@ -18,6 +18,7 @@ type RoomProfile struct {
 	Title      string           `json:"title"`      // 房间名称
 	Status     Status           `json:"status"`     // 房间状态
 	Creator    *entity.UserInfo `json:"creator"`    // 房主信息
+	Player     *entity.UserInfo `json:"player"`     // 玩家信息
 	CreateTime time.Time        `json:"createTime"` // 创建时间
 }
 
@@ -50,6 +51,7 @@ func CreateNewRoom(owner *entity.UserInfo) *Room {
 		Title:      owner.Username + "的房间",
 		Status:     Status_Waiting,
 		Creator:    owner,
+		Player:     nil,
 		CreateTime: time.Now(),
 	}
 	room := &Room{
@@ -67,24 +69,26 @@ func CreateNewRoom(owner *entity.UserInfo) *Room {
 	return room
 }
 
-func (room *Room) PlayerJoin(playerID string, client *player.Client) {
+func (room *Room) PlayerJoin(playerInfo *entity.UserInfo, client *player.Client) {
 	room.lock.Lock()
 	defer room.lock.Unlock()
 
-	if room.RoomProfile.Creator.ID == playerID {
+	client.Identity = playerInfo
+
+	if room.RoomProfile.Creator.ID == playerInfo.ID {
 		// 房主
 		room.Owner = client
 		slog.Info("房主客户端连接上房间",
 			slog.String("room_id", room.ID),
-			slog.String("player_id", playerID),
 			slog.String("client_id", client.ID),
+			slog.Any("player_id", playerInfo),
 		)
 	} else {
 		room.Player = client
 		slog.Info("玩家客户端连接上房间",
 			slog.String("room_id", room.ID),
-			slog.String("player_id", playerID),
 			slog.String("client_id", client.ID),
+			slog.Any("player_id", playerInfo),
 		)
 	}
 
@@ -186,16 +190,15 @@ func (room *Room) gameBegin() {
 		room.PlayerHold(),
 		room.Player.ID, room.Player.RemoteAddr())
 
-	// 通知执白执黑已经谁先行
+	// TODO 通知执白执黑已经谁先行
 	room.whoseTurn = room.whiteHolder
 
 	pack := msg.UserPack[msg.BroadcastGameBeginning]{
 		Type: msg.KindBroadcastRoomGameBeginning,
 		Payload: msg.BroadcastGameBeginning{
 			RoomID:      room.ID,
-			WhiteHolder: room.whiteHolder.ID,
-			BlackHolder: room.blackHolder.ID,
-			WhoseTurn:   room.whiteHolder.ID,
+			WhiteHolder: room.whiteHolder.PlayerProfile(),
+			BlackHolder: room.blackHolder.PlayerProfile(),
 		},
 	}
 	room.Broadcast(pack.Marshal())

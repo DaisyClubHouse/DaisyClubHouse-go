@@ -57,6 +57,18 @@ func (client *Client) RemoteAddr() net.Addr {
 	return client.conn.RemoteAddr()
 }
 
+func (client *Client) PlayerID() string {
+	return client.Identity.ID
+}
+
+func (client *Client) PlayerProfile() *msg.PlayerProfile {
+	return &msg.PlayerProfile{
+		ID:     client.Identity.ID,
+		Name:   client.Identity.Username,
+		Avatar: client.Identity.Avatar,
+	}
+}
+
 func (client *Client) readPumpLoop() {
 	defer func() {
 		client.conn.Close()

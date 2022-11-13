@@ -9,8 +9,9 @@ type CreateRoomResponse struct {
 }
 
 type JoinRoomRequest struct {
-	PlayerID string `json:"player_id"` // 玩家ID
-	RoomID   string `json:"room_id"`   // 房间ID
+	PlayerID   string `json:"player_id"`   // 玩家ID
+	PlayerName string `json:"player_name"` // 玩家姓名
+	RoomID     string `json:"room_id"`     // 房间ID
 }
 
 type JoinRoomResponse struct {
@@ -22,11 +23,16 @@ type PlaceThePieceRequest struct {
 	Y int `json:"y"` // 纵坐标
 }
 
+type PlayerProfile struct {
+	ID     string `json:"id"`     // 玩家ID
+	Name   string `json:"name"`   // 玩家姓名
+	Avatar string `json:"avatar"` // 头像
+}
+
 type BroadcastGameBeginning struct {
-	RoomID      string `json:"room_id"`      // 房间ID
-	WhiteHolder string `json:"white_holder"` // 白棋所有者ID
-	BlackHolder string `json:"black_holder"` // 黑棋所有者ID
-	WhoseTurn   string `json:"whose_turn"`   // 轮到谁下
+	RoomID      string         `json:"room_id"`      // 房间ID
+	WhiteHolder *PlayerProfile `json:"white_holder"` // 白棋所有者ID
+	BlackHolder *PlayerProfile `json:"black_holder"` // 黑棋所有者ID
 }
 
 type BroadcastPlayerPlaceThePiece struct {

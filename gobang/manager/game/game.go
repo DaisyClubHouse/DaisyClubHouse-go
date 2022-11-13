@@ -1,8 +1,10 @@
 package game
 
 import (
+	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/event"
@@ -85,7 +87,13 @@ func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 	b.playerRoomMapping[playerC.ID] = e.RoomID
 
 	// 玩家加入房间
-	targetRoom.PlayerJoin(e.PlayerID, playerC)
+	targetRoom.PlayerJoin(&entity.UserInfo{
+		ID:         e.PlayerID,
+		Username:   e.PlayerName,
+		Nickname:   "",
+		Avatar:     fmt.Sprintf("https://joeschmoe.io/api/v1/%s", e.PlayerName),
+		CreateTime: time.Now(),
+	}, playerC)
 }
 
 // 在棋盘上落子处理事件

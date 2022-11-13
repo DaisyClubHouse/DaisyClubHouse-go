@@ -26,9 +26,10 @@ func handleJoinRoomRequest(client *Client, payload []byte) {
 	}
 
 	evt := event.JoinRoomEvent{
-		PlayerID: req.PlayerID,
-		ClientID: client.ID,
-		RoomID:   req.RoomID,
+		PlayerID:   req.PlayerID,
+		PlayerName: req.PlayerName,
+		ClientID:   client.ID,
+		RoomID:     req.RoomID,
 	}
 	client.bus.Publish(event.ApplyForJoiningRoom, &evt)
 }
