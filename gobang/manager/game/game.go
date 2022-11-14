@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-type GameManager struct {
+type Manager struct {
 	clientManager     *client.PlayerClientManager
 	lock              sync.RWMutex
 	Bus               EventBus.Bus
@@ -25,13 +25,13 @@ type GameManager struct {
 
 var once sync.Once
 
-func NewGameManagerInstance(clientManager *client.PlayerClientManager) *GameManager {
-	var gm *GameManager
+func NewGameManagerInstance(clientManager *client.PlayerClientManager) *Manager {
+	var gm *Manager
 
 	once.Do(func() {
-		gm = func() *GameManager {
+		gm = func() *Manager {
 			bus := EventBus.New()
-			chessboard := GameManager{
+			chessboard := Manager{
 				clientManager:     clientManager,
 				lock:              sync.RWMutex{},
 				Bus:               bus,
@@ -50,6 +50,12 @@ func NewGameManagerInstance(clientManager *client.PlayerClientManager) *GameMana
 				log.Fatalf("Subscribe error: %v\n", err)
 				return nil
 			}
+
+			err = bus.Subscribe(event.PlayerDisconnect, chessboard.eventPlayerDisconnect)
+			if err != nil {
+				log.Fatalf("Subscribe error: %v\n", err)
+				return nil
+			}
 			return &chessboard
 		}()
 	})
@@ -60,7 +66,7 @@ func NewGameManagerInstance(clientManager *client.PlayerClientManager) *GameMana
 }
 
 // 加入房间处理事件
-func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
+func (b *Manager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 	log.Printf("eventApplyForJoiningRoom: %v\n", e)
 	b.lock.Lock()
 	defer b.lock.Unlock()
@@ -97,33 +103,65 @@ func (b *GameManager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 }
 
 // 在棋盘上落子处理事件
-func (b *GameManager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
+func (b *Manager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
 	log.Printf("eventApplyPlaceThePiece: %v\n", e)
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	roomId := b.playerRoomMapping[e.PlayerID]
+	roomId := b.playerRoomMapping[e.ClientID]
 	targetRoom, ok := b.rooms[roomId]
 	if !ok {
 		log.Printf("未找到房间")
 		return
 	}
 
-	result := targetRoom.PlayerPlaceThePiece(e.PlayerID, e.X, e.Y)
+	result := targetRoom.PlayerPlaceThePiece(e.ClientID, e.X, e.Y)
 	log.Println(result)
 }
 
+// eventPlayerDisconnect 玩家断线事件
+func (b *Manager) eventPlayerDisconnect(e *event.PlayerDisconnectEvent) {
+	log.Printf("eventPlayerDisconnect: %v\n", e)
+	b.lock.Lock()
+	defer b.lock.Unlock()
+
+	roomId := b.playerRoomMapping[e.ClientID]
+	targetRoom, ok := b.rooms[roomId]
+	if !ok {
+		log.Printf("未找到房间")
+		return
+	}
+
+	// 玩家离开房间
+	playerClient, err := b.clientManager.GetClientByClientID(e.ClientID)
+	if err != nil {
+		slog.Error("未查询到玩家信息", err, slog.String("player_id", e.ClientID))
+		return
+	}
+	b.Disconnect(playerClient)
+
+	// 房间结束对局
+	targetRoom.DisconnectGameOver()
+
+	b.removeRoom(targetRoom.ID)
+}
+
+func (b *Manager) removeRoom(roomId string) {
+	slog.Info("移除房间", slog.String("room_id", roomId))
+	delete(b.rooms, roomId)
+}
+
 // Connect 连接到新客户端
-func (b *GameManager) Connect(client *player.Client) {
+func (b *Manager) Connect(client *player.Client) {
 	b.clientManager.ClientConnected(client)
 }
 
 // Disconnect 客户端断开连接
-func (b *GameManager) Disconnect(client *player.Client) {
+func (b *Manager) Disconnect(client *player.Client) {
 	b.clientManager.ClientDisconnected(client.ID)
 }
 
 // RoomProfileList 查询房间简要信息列表
-func (b *GameManager) RoomProfileList() []room.RoomProfile {
+func (b *Manager) RoomProfileList() []room.RoomProfile {
 	profileList := make([]room.RoomProfile, 0, len(b.rooms))
 	for _, item := range b.rooms {
 		profileList = append(profileList, item.RoomProfile)
@@ -132,7 +170,7 @@ func (b *GameManager) RoomProfileList() []room.RoomProfile {
 }
 
 // CreateRoom 创建房间
-func (b *GameManager) CreateRoom(user *entity.UserInfo) (*room.RoomProfile, error) {
+func (b *Manager) CreateRoom(user *entity.UserInfo) (*room.RoomProfile, error) {
 	log.Printf("CreateRoom: %v\n", user)
 	b.lock.Lock()
 	defer b.lock.Unlock()

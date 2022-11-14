@@ -11,10 +11,10 @@ import (
 )
 
 type HttpServerHandler struct {
-	game *game.GameManager
+	game *game.Manager
 }
 
-func NewHttpServerHandler(game *game.GameManager) *HttpServerHandler {
+func NewHttpServerHandler(game *game.Manager) *HttpServerHandler {
 	return &HttpServerHandler{game: game}
 }
 

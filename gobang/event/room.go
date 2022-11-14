@@ -3,6 +3,7 @@ package event
 const (
 	ApplyForJoiningRoom = "ApplyForJoiningRoom" // 申请加入房间
 	ApplyPlaceThePiece  = "ApplyPlaceThePiece"  // 在棋盘上放置棋子
+	PlayerDisconnect    = "PlayerDisconnect"    // 玩家断线
 )
 
 // JoinRoomEvent 加入房间事件
@@ -15,7 +16,12 @@ type JoinRoomEvent struct {
 
 // PlaceThePieceEvent 在棋盘上落子事件
 type PlaceThePieceEvent struct {
-	PlayerID string // 玩家ID
+	ClientID string // 玩家ID
 	X        int    // 横坐标
 	Y        int    // 纵坐标
+}
+
+// PlayerDisconnectEvent 玩家断线
+type PlayerDisconnectEvent struct {
+	ClientID string // 玩家ID
 }

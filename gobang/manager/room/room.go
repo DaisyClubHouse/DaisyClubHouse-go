@@ -39,9 +39,10 @@ type Room struct {
 type Status int
 
 const (
-	Status_Waiting    = iota // 等待玩家加入
-	Status_Playing           // 游戏中
-	Status_Settlement        // 游戏结算中
+	Status_Waiting    Status = iota // 等待玩家加入
+	Status_Playing                  // 游戏中
+	Status_Settlement               // 游戏结算中
+	Status_Zombie                   // 游戏结束待回收
 )
 
 // CreateNewRoom 创建新房间
@@ -198,6 +199,25 @@ func (room *Room) gameBegin() {
 	room.Broadcast(pack.Marshal())
 
 	room.turnChanged(false)
+}
+
+// DisconnectGameOver 玩家断线，游戏结束
+func (room *Room) DisconnectGameOver() {
+	slog.Info("玩家断线游戏结束", slog.String("room_id", room.ID))
+
+	if room.RoomProfile.Status == Status_Zombie {
+		return
+	}
+
+	// 发送公告
+	if p := room.Owner; p != nil {
+		p.NoticedDisconnect()
+	}
+	if p := room.Player; p != nil {
+		p.NoticedDisconnect()
+	}
+
+	room.RoomProfile.Status = Status_Zombie
 }
 
 func (room *Room) turnChanged(turn bool) {

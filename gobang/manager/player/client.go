@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"DaisyClubHouse/domain/entity"
+	"DaisyClubHouse/gobang/event"
 	"DaisyClubHouse/gobang/msg"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
@@ -17,19 +18,29 @@ type Client struct {
 	ID   string
 	conn *websocket.Conn
 
+	status   status
 	send     chan []byte
 	close    chan struct{}
 	bus      EventBus.Bus
 	Identity *entity.UserInfo // 认证身份信息
 }
 
+type status uint8
+
+const (
+	Connected status = iota
+	Disconnected
+)
+
 func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Client {
 	return &Client{
-		ID:    utils.GenerateRandomID(),
-		conn:  conn,
-		send:  make(chan []byte, 256),
-		close: make(chan struct{}),
-		bus:   bus,
+		ID:       utils.GenerateRandomID(),
+		conn:     conn,
+		status:   Connected,
+		send:     make(chan []byte, 256),
+		close:    make(chan struct{}),
+		bus:      bus,
+		Identity: nil,
 	}
 }
 
@@ -71,7 +82,7 @@ func (client *Client) PlayerProfile() *msg.PlayerProfile {
 
 func (client *Client) readPumpLoop() {
 	defer func() {
-		client.conn.Close()
+		client.Disconnect()
 	}()
 
 	for {
@@ -116,7 +127,12 @@ func (client *Client) readPumpLoop() {
 
 func (client *Client) writePumpLoop() {
 	defer func() {
-		client.conn.Close()
+		slog.Info("writePumpLoop exit",
+			slog.String("player_id", client.PlayerID()),
+			slog.String("client_id", client.ID),
+			slog.Any("addr", client.conn.RemoteAddr()))
+
+		client.Disconnect()
 	}()
 
 	heartbeatTicker := time.NewTicker(10 * time.Second)
@@ -144,6 +160,9 @@ func (client *Client) writePumpLoop() {
 				log.Printf("[error] Close Writer: %v", err)
 				return
 			}
+		case <-client.close:
+			client.status = Disconnected
+			return
 		case <-heartbeatTicker.C:
 			// log.Printf("[send] Ping %v", client.conn.RemoteAddr())
 			if err := client.conn.WriteMessage(websocket.BinaryMessage, nil); err != nil {
@@ -152,6 +171,28 @@ func (client *Client) writePumpLoop() {
 			}
 		}
 	}
+
+}
+
+func (client *Client) Disconnect() {
+	client.NoticedDisconnect()
+
+	// 房间断线通知
+	client.bus.Publish(event.PlayerDisconnect, &event.PlayerDisconnectEvent{ClientID: client.ID})
+}
+
+func (client *Client) NoticedDisconnect() {
+	if client.status == Disconnected {
+		return
+	}
+
+	slog.Info("关闭链接", slog.String("player_id", client.PlayerID()), slog.String("client_id", client.ID))
+
+	if err := client.conn.Close(); err != nil {
+		slog.Error("链接关闭错误", err)
+	}
+
+	client.close <- struct{}{}
 }
 
 func (client *Client) SendRawMessage(raw []byte) {

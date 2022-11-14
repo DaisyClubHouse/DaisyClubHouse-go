@@ -42,7 +42,7 @@ func handlePlaceThePieceRequest(client *Client, payload []byte) {
 		return
 	}
 	evt := event.PlaceThePieceEvent{
-		PlayerID: client.ID,
+		ClientID: client.ID,
 		X:        req.X,
 		Y:        req.Y,
 	}

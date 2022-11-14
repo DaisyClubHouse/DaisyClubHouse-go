@@ -18,7 +18,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request, game *game.GameManager) {
+func wsHandler(w http.ResponseWriter, r *http.Request, game *game.Manager) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatalf("upgrade error: %v", err)
@@ -32,7 +32,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, game *game.GameManager) {
 	client.Run()
 }
 
-func WebsocketAdaptor(game *game.GameManager) gin.HandlerFunc {
+func WebsocketAdaptor(game *game.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		wsHandler(c.Writer, c.Request, game)
 	}
