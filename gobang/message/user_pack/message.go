@@ -1,4 +1,4 @@
-package msg
+package user_pack
 
 import (
 	"encoding/json"
@@ -25,9 +25,10 @@ const (
 	KindPlaceThePieceResponse      = 21   //
 )
 const (
-	KindBroadcastRoomGameBeginning   Kind = 100 // 广播游戏开始 100
-	KindBroadcastPlayerAction        Kind = 200 // 广播通知行动玩家 200
-	KindBroadcastPlayerPlaceThePiece Kind = 300 // 广播玩家操作落子 300
+	KindBroadcastRoomGameBeginning   Kind = 100 // 广播游戏开始
+	KindBroadcastPlayerAction        Kind = 200 // 广播通知行动玩家
+	KindBroadcastPlayerPlaceThePiece Kind = 300 // 广播玩家操作落子
+	KindBroadcastGameOver            Kind = 999 // 游戏结束
 )
 
 func Parsing(data []byte) (Kind, []byte, error) {

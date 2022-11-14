@@ -1,4 +1,4 @@
-package event
+package receiver
 
 const (
 	ApplyForJoiningRoom = "ApplyForJoiningRoom" // 申请加入房间
@@ -19,9 +19,4 @@ type PlaceThePieceEvent struct {
 	ClientID string // 玩家ID
 	X        int    // 横坐标
 	Y        int    // 纵坐标
-}
-
-// PlayerDisconnectEvent 玩家断线
-type PlayerDisconnectEvent struct {
-	ClientID string // 玩家ID
 }

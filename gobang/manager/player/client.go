@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"DaisyClubHouse/domain/entity"
-	"DaisyClubHouse/gobang/event"
-	"DaisyClubHouse/gobang/msg"
+	"DaisyClubHouse/gobang/message/inner"
+	"DaisyClubHouse/gobang/message/receiver"
+	"DaisyClubHouse/gobang/message/user_pack"
 	"DaisyClubHouse/utils"
 	"github.com/asaskevich/EventBus"
 	"github.com/gorilla/websocket"
@@ -72,8 +73,8 @@ func (client *Client) PlayerID() string {
 	return client.Identity.ID
 }
 
-func (client *Client) PlayerProfile() *msg.PlayerProfile {
-	return &msg.PlayerProfile{
+func (client *Client) PlayerProfile() *user_pack.PlayerProfile {
+	return &user_pack.PlayerProfile{
 		ID:     client.Identity.ID,
 		Name:   client.Identity.Username,
 		Avatar: client.Identity.Avatar,
@@ -104,7 +105,7 @@ func (client *Client) readPumpLoop() {
 		)
 
 		if mt == websocket.TextMessage {
-			kind, payload, err := msg.Parsing(message)
+			kind, payload, err := user_pack.Parsing(message)
 			if err != nil {
 				slog.Error("消息解析失败", err)
 				return
@@ -178,7 +179,7 @@ func (client *Client) Disconnect() {
 	client.NoticedDisconnect()
 
 	// 房间断线通知
-	client.bus.Publish(event.PlayerDisconnect, &event.PlayerDisconnectEvent{ClientID: client.ID})
+	client.bus.Publish(receiver.PlayerDisconnect, &inner.PlayerDisconnectEvent{ClientID: client.ID})
 }
 
 func (client *Client) NoticedDisconnect() {

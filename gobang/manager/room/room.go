@@ -7,7 +7,7 @@ import (
 
 	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/manager/player"
-	"DaisyClubHouse/gobang/msg"
+	"DaisyClubHouse/gobang/message/user_pack"
 	"DaisyClubHouse/utils"
 	"golang.org/x/exp/slog"
 )
@@ -118,13 +118,15 @@ func (room *Room) PlayerHold() string {
 	}
 }
 
-func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
+func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) {
 	if room.Status != Status_Playing {
-		return "游戏未开始"
+		slog.Info("游戏未开始", slog.String("player_id", playerID))
+		return
 	}
 
 	if room.whoseTurn != nil && room.whoseTurn.ID != playerID {
-		return "不是你的回合"
+		slog.Info("不是你的回合", slog.String("player_id", playerID))
+		return
 	}
 
 	if room.whiteHolder.ID == playerID {
@@ -132,22 +134,14 @@ func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
 	} else if room.blackHolder.ID == playerID {
 		room.blackMatrix.Put(x, y)
 	} else {
-		return "不是你的回合"
+		slog.Info("不是你的回合", slog.String("player_id", playerID))
+		return
 	}
 
-	// 判断是否获胜
-	// if room.whiteMatrix.IsWin(x, y) {
-	// 	room.status = Status_Settlement
-	// 	return "白棋获胜"
-	// } else if room.blackMatrix.IsWin(x, y) {
-	// 	room.status = Status_Settlement
-	// 	return "黑棋获胜"
-	// }
-
 	// 广播玩家落子信息
-	pack := msg.UserPack[msg.BroadcastPlayerPlaceThePiece]{
-		Type: msg.KindBroadcastPlayerPlaceThePiece,
-		Payload: msg.BroadcastPlayerPlaceThePiece{
+	pack := user_pack.UserPack[user_pack.BroadcastPlayerPlaceThePiece]{
+		Type: user_pack.KindBroadcastPlayerPlaceThePiece,
+		Payload: user_pack.BroadcastPlayerPlaceThePiece{
 			RoomID:     room.ID,
 			PlayerID:   room.whoseTurn.PlayerID(),
 			PieceWhite: room.whiteHolder.ID == room.whoseTurn.ID,
@@ -159,7 +153,32 @@ func (room *Room) PlayerPlaceThePiece(playerID string, x, y int) string {
 	go room.Broadcast(pack.Marshal())
 
 	go room.turnChanged(true)
-	return "OK"
+
+	// 判断是否获胜
+	if room.whiteMatrix.IsWin() {
+		room.gameSettlement(room.whiteHolder.PlayerProfile())
+		slog.Info("白棋获胜", slog.Any("winner", room.whiteHolder.PlayerProfile()))
+		return
+	} else if room.blackMatrix.IsWin() {
+		room.gameSettlement(room.whiteHolder.PlayerProfile())
+		slog.Info("黑棋获胜", slog.Any("winner", room.blackHolder.PlayerProfile()))
+		return
+	}
+}
+
+func (room *Room) gameSettlement(winner *user_pack.PlayerProfile) {
+	// 结算中
+	room.Status = Status_Settlement
+
+	// 广播游戏结算消息
+	pack := user_pack.UserPack[user_pack.BroadcastGameOver]{
+		Type: user_pack.KindBroadcastGameOver,
+		Payload: user_pack.BroadcastGameOver{
+			Winner: winner,
+		},
+	}
+
+	go room.Broadcast(pack.Marshal())
 }
 
 func (room *Room) gameBegin() {
@@ -188,9 +207,9 @@ func (room *Room) gameBegin() {
 	// 初始化通知执白执黑已经谁先行
 	room.whoseTurn = room.blackHolder
 
-	pack := msg.UserPack[msg.BroadcastGameBeginning]{
-		Type: msg.KindBroadcastRoomGameBeginning,
-		Payload: msg.BroadcastGameBeginning{
+	pack := user_pack.UserPack[user_pack.BroadcastGameBeginning]{
+		Type: user_pack.KindBroadcastRoomGameBeginning,
+		Payload: user_pack.BroadcastGameBeginning{
 			RoomID:      room.ID,
 			WhiteHolder: room.whiteHolder.PlayerProfile(),
 			BlackHolder: room.blackHolder.PlayerProfile(),
@@ -231,9 +250,9 @@ func (room *Room) turnChanged(turn bool) {
 		}
 	}
 
-	pack := msg.UserPack[msg.BroadcastPlayerAction]{
-		Type: msg.KindBroadcastPlayerAction,
-		Payload: msg.BroadcastPlayerAction{
+	pack := user_pack.UserPack[user_pack.BroadcastPlayerAction]{
+		Type: user_pack.KindBroadcastPlayerAction,
+		Payload: user_pack.BroadcastPlayerAction{
 			RoomId:    room.ID,
 			WhoseTurn: room.whoseTurn.PlayerProfile(),
 		},

@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"DaisyClubHouse/domain/entity"
-	"DaisyClubHouse/gobang/event"
 	"DaisyClubHouse/gobang/manager/client"
 	"DaisyClubHouse/gobang/manager/player"
 	"DaisyClubHouse/gobang/manager/room"
+	"DaisyClubHouse/gobang/message/inner"
+	"DaisyClubHouse/gobang/message/receiver"
 	"github.com/asaskevich/EventBus"
 	"golang.org/x/exp/slog"
 )
@@ -39,19 +40,19 @@ func NewGameManagerInstance(clientManager *client.PlayerClientManager) *Manager 
 				playerRoomMapping: make(map[string]string),
 			}
 
-			err := bus.Subscribe(event.ApplyForJoiningRoom, chessboard.eventApplyForJoiningRoom)
+			err := bus.Subscribe(receiver.ApplyForJoiningRoom, chessboard.eventApplyForJoiningRoom)
 			if err != nil {
 				log.Fatalf("Subscribe error: %v\n", err)
 				return nil
 			}
 
-			err = bus.Subscribe(event.ApplyPlaceThePiece, chessboard.eventApplyPlaceThePiece)
+			err = bus.Subscribe(receiver.ApplyPlaceThePiece, chessboard.eventApplyPlaceThePiece)
 			if err != nil {
 				log.Fatalf("Subscribe error: %v\n", err)
 				return nil
 			}
 
-			err = bus.Subscribe(event.PlayerDisconnect, chessboard.eventPlayerDisconnect)
+			err = bus.Subscribe(receiver.PlayerDisconnect, chessboard.eventPlayerDisconnect)
 			if err != nil {
 				log.Fatalf("Subscribe error: %v\n", err)
 				return nil
@@ -66,7 +67,7 @@ func NewGameManagerInstance(clientManager *client.PlayerClientManager) *Manager 
 }
 
 // 加入房间处理事件
-func (b *Manager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
+func (b *Manager) eventApplyForJoiningRoom(e *receiver.JoinRoomEvent) {
 	log.Printf("eventApplyForJoiningRoom: %v\n", e)
 	b.lock.Lock()
 	defer b.lock.Unlock()
@@ -103,7 +104,7 @@ func (b *Manager) eventApplyForJoiningRoom(e *event.JoinRoomEvent) {
 }
 
 // 在棋盘上落子处理事件
-func (b *Manager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
+func (b *Manager) eventApplyPlaceThePiece(e *receiver.PlaceThePieceEvent) {
 	log.Printf("eventApplyPlaceThePiece: %v\n", e)
 	b.lock.Lock()
 	defer b.lock.Unlock()
@@ -114,12 +115,11 @@ func (b *Manager) eventApplyPlaceThePiece(e *event.PlaceThePieceEvent) {
 		return
 	}
 
-	result := targetRoom.PlayerPlaceThePiece(e.ClientID, e.X, e.Y)
-	log.Println(result)
+	targetRoom.PlayerPlaceThePiece(e.ClientID, e.X, e.Y)
 }
 
 // eventPlayerDisconnect 玩家断线事件
-func (b *Manager) eventPlayerDisconnect(e *event.PlayerDisconnectEvent) {
+func (b *Manager) eventPlayerDisconnect(e *inner.PlayerDisconnectEvent) {
 	log.Printf("eventPlayerDisconnect: %v\n", e)
 	b.lock.Lock()
 	defer b.lock.Unlock()
