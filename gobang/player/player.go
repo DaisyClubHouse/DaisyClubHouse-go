@@ -15,37 +15,30 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-type Client struct {
-	ID   string
-	conn *websocket.Conn
-
-	status   status
+// Player 玩家对象
+type Player struct {
+	ID       string
+	UserInfo *entity.UserInfo // 认证身份信息
+	online   bool             // 长链接是否在线
+	conn     *websocket.Conn
 	send     chan []byte
 	close    chan struct{}
 	bus      EventBus.Bus
-	Identity *entity.UserInfo // 认证身份信息
 }
 
-type status uint8
-
-const (
-	Connected status = iota
-	Disconnected
-)
-
-func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Client {
-	return &Client{
+func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Player {
+	return &Player{
 		ID:       utils.GenerateRandomID(),
+		UserInfo: nil,
+		online:   true,
 		conn:     conn,
-		status:   Connected,
 		send:     make(chan []byte, 256),
 		close:    make(chan struct{}),
 		bus:      bus,
-		Identity: nil,
 	}
 }
 
-func (client *Client) Run() {
+func (client *Player) Run() {
 	client.conn.SetCloseHandler(func(code int, text string) error {
 		slog.Info("客户端断开连接",
 			slog.String("client_id", client.ID),
@@ -62,26 +55,58 @@ func (client *Client) Run() {
 	slog.Info("客户端已连接", slog.String("client_id", client.ID), slog.Any("addr", client.conn.RemoteAddr()))
 
 	go client.writePumpLoop()
-	client.readPumpLoop()
+	go client.readPumpLoop()
 }
 
-func (client *Client) RemoteAddr() net.Addr {
+func (client *Player) RemoteAddr() net.Addr {
 	return client.conn.RemoteAddr()
 }
 
-func (client *Client) PlayerID() string {
-	return client.Identity.ID
+func (client *Player) PlayerID() string {
+	return client.UserInfo.ID
 }
 
-func (client *Client) PlayerProfile() *user_pack.PlayerProfile {
+func (client *Player) PlayerProfile() *user_pack.PlayerProfile {
 	return &user_pack.PlayerProfile{
-		ID:     client.Identity.ID,
-		Name:   client.Identity.Username,
-		Avatar: client.Identity.Avatar,
+		ID:     client.UserInfo.ID,
+		Name:   client.UserInfo.Username,
+		Avatar: client.UserInfo.Avatar,
 	}
 }
 
-func (client *Client) readPumpLoop() {
+func (client *Player) Disconnect() {
+	client.NoticedDisconnect()
+
+	// 房间断线通知
+	client.bus.Publish(receiver.PlayerDisconnect, &inner.PlayerDisconnectEvent{ClientID: client.ID})
+}
+
+func (client *Player) NoticedDisconnect() {
+	if !client.online {
+		return
+	}
+
+	slog.Info("关闭链接", slog.String("player_id", client.PlayerID()), slog.String("client_id", client.ID))
+
+	if err := client.conn.Close(); err != nil {
+		slog.Error("链接关闭错误", err)
+	}
+
+	client.close <- struct{}{}
+}
+
+// SendRawMessage 给玩家推送消息
+func (client *Player) SendRawMessage(raw []byte) {
+	slog.Info("[send msg to player]",
+		slog.String("id", client.ID),
+		slog.Any("remoteAddr", client.RemoteAddr()),
+		slog.Int("length", len(raw)))
+
+	client.send <- raw
+}
+
+// readPumpLoop 读循环
+func (client *Player) readPumpLoop() {
 	defer func() {
 		client.Disconnect()
 	}()
@@ -126,7 +151,8 @@ func (client *Client) readPumpLoop() {
 	}
 }
 
-func (client *Client) writePumpLoop() {
+// writePumpLoop 写循环
+func (client *Player) writePumpLoop() {
 	defer func() {
 		slog.Info("writePumpLoop exit",
 			slog.String("player_id", client.PlayerID()),
@@ -162,10 +188,10 @@ func (client *Client) writePumpLoop() {
 				return
 			}
 		case <-client.close:
-			client.status = Disconnected
+			client.online = false
 			return
 		case <-heartbeatTicker.C:
-			// log.Printf("[send] Ping %v", client.conn.RemoteAddr())
+			log.Printf("[send] Ping %v", client.conn.RemoteAddr())
 			if err := client.conn.WriteMessage(websocket.BinaryMessage, nil); err != nil {
 				log.Printf("[error] WriteMessage: %v", err)
 				return
@@ -173,30 +199,4 @@ func (client *Client) writePumpLoop() {
 		}
 	}
 
-}
-
-func (client *Client) Disconnect() {
-	client.NoticedDisconnect()
-
-	// 房间断线通知
-	client.bus.Publish(receiver.PlayerDisconnect, &inner.PlayerDisconnectEvent{ClientID: client.ID})
-}
-
-func (client *Client) NoticedDisconnect() {
-	if client.status == Disconnected {
-		return
-	}
-
-	slog.Info("关闭链接", slog.String("player_id", client.PlayerID()), slog.String("client_id", client.ID))
-
-	if err := client.conn.Close(); err != nil {
-		slog.Error("链接关闭错误", err)
-	}
-
-	client.close <- struct{}{}
-}
-
-func (client *Client) SendRawMessage(raw []byte) {
-	log.Printf("[send to %s] address:%s, lens:%d", client.ID, client.RemoteAddr(), len(raw))
-	client.send <- raw
 }

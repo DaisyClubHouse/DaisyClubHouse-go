@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"DaisyClubHouse/domain/entity"
-	"DaisyClubHouse/gobang/manager/player"
 	"DaisyClubHouse/gobang/message/user_pack"
+	"DaisyClubHouse/gobang/player"
 	"DaisyClubHouse/utils"
 	"golang.org/x/exp/slog"
 )
@@ -26,12 +26,12 @@ type RoomProfile struct {
 type Room struct {
 	RoomProfile // 房间概要信息
 
-	Owner       *player.Client
-	Player      *player.Client
+	Owner       *player.Player
+	Player      *player.Player
 	lock        sync.Mutex
-	whoseTurn   *player.Client
-	whiteHolder *player.Client      // 执白棋的玩家（先行）
-	blackHolder *player.Client      // 执黑棋的玩家（后行）
+	whoseTurn   *player.Player
+	whiteHolder *player.Player      // 执白棋的玩家（先行）
+	blackHolder *player.Player      // 执黑棋的玩家（后行）
 	whiteMatrix *entity.ChessMatrix // 白棋的棋盘
 	blackMatrix *entity.ChessMatrix // 黑棋的棋盘
 }
@@ -69,11 +69,11 @@ func CreateNewRoom(owner *entity.UserInfo) *Room {
 	return room
 }
 
-func (room *Room) PlayerJoin(playerInfo *entity.UserInfo, client *player.Client) {
+func (room *Room) PlayerJoin(playerInfo *entity.UserInfo, client *player.Player) {
 	room.lock.Lock()
 	defer room.lock.Unlock()
 
-	client.Identity = playerInfo
+	client.UserInfo = playerInfo
 
 	if room.RoomProfile.Creator.ID == playerInfo.ID {
 		// 房主

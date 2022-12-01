@@ -8,10 +8,10 @@ import (
 
 	"DaisyClubHouse/domain/entity"
 	"DaisyClubHouse/gobang/manager/client"
-	"DaisyClubHouse/gobang/manager/player"
 	"DaisyClubHouse/gobang/manager/room"
 	"DaisyClubHouse/gobang/message/inner"
 	"DaisyClubHouse/gobang/message/receiver"
+	"DaisyClubHouse/gobang/player"
 	"github.com/asaskevich/EventBus"
 	"golang.org/x/exp/slog"
 )
@@ -151,12 +151,12 @@ func (b *Manager) removeRoom(roomId string) {
 }
 
 // Connect 连接到新客户端
-func (b *Manager) Connect(client *player.Client) {
+func (b *Manager) Connect(client *player.Player) {
 	b.clientManager.ClientConnected(client)
 }
 
 // Disconnect 客户端断开连接
-func (b *Manager) Disconnect(client *player.Client) {
+func (b *Manager) Disconnect(client *player.Player) {
 	b.clientManager.ClientDisconnected(client.ID)
 }
 
