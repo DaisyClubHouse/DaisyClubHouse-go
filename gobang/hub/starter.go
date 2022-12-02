@@ -6,9 +6,7 @@ import (
 	"go.uber.org/fx"
 )
 
-func GameHubProvider(lc fx.Lifecycle) *GameHub {
-	hub := NewGameHub()
-
+func GameHubInvoker(lc fx.Lifecycle, hub *GameHub) error {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			go hub.run()
@@ -18,5 +16,5 @@ func GameHubProvider(lc fx.Lifecycle) *GameHub {
 		OnStop: nil,
 	})
 
-	return hub
+	return nil
 }

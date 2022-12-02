@@ -1,45 +1,43 @@
 package hub
 
 import (
+	"DaisyClubHouse/gobang/client"
 	"DaisyClubHouse/gobang/player"
+	"github.com/asaskevich/EventBus"
 	"github.com/gorilla/websocket"
 )
 
 // GameHub 游戏总线
 type GameHub struct {
-	players map[string]*player.Player // 已认证玩家
+	players     map[string]*player.Player // 已认证玩家
+	connections map[*client.Client]bool   // 未认证长链接
 
-	register   chan *player.Player
-	unregister chan *player.Player
+	Register chan *websocket.Conn
+	bus      EventBus.Bus // 事件总线
 }
 
-func NewGameHub() *GameHub {
+func NewGameHub(bus EventBus.Bus) *GameHub {
 	return &GameHub{
-		players:    map[string]*player.Player{},
-		register:   make(chan *player.Player),
-		unregister: make(chan *player.Player),
+		players:     map[string]*player.Player{},
+		connections: map[*client.Client]bool{},
+		Register:    make(chan *websocket.Conn, 10),
+		bus:         bus,
 	}
 }
 
-func (hub *GameHub) Connect(conn *websocket.Conn) error {
-	// TODO 身份验证工作
+func (hub *GameHub) Certificate() {
 
-	p := player.Wrap2Player(conn)
-
-	hub.register <- p
-
-	return nil
 }
 
 func (hub *GameHub) run() {
 	for {
 		select {
-		case p := <-hub.register:
-			// 注册
-			hub.players[p.ID] = p
-		case p := <-hub.unregister:
-			// 登出
-			delete(hub.players, p.ID)
+		case conn := <-hub.Register:
+			// 默认未认证
+			c := client.NewClient(conn, hub.bus)
+			c.Run()
+
+			hub.connections[c] = false
 		}
 	}
 }

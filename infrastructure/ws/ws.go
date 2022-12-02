@@ -29,6 +29,6 @@ func WebsocketAdaptor(hub *hub.GameHub) gin.HandlerFunc {
 		slog.Info("receive a new connection", slog.Any("remote_addr", ws.RemoteAddr()))
 
 		// 建立链接
-		_ = hub.Connect(ws)
+		hub.Register <- ws
 	}
 }
