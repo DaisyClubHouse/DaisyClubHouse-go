@@ -21,8 +21,14 @@ func NewGameHub() *GameHub {
 	}
 }
 
-func (hub *GameHub) Connect(conn *websocket.Conn) {
+func (hub *GameHub) Connect(conn *websocket.Conn) error {
+	// TODO 身份验证工作
 
+	p := player.Wrap2Player(conn)
+
+	hub.register <- p
+
+	return nil
 }
 
 func (hub *GameHub) run() {

@@ -26,7 +26,7 @@ type Player struct {
 	bus      EventBus.Bus
 }
 
-func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Player {
+func Wrap2Player(conn *websocket.Conn) *Player {
 	return &Player{
 		ID:       utils.GenerateRandomID(),
 		UserInfo: nil,
@@ -34,7 +34,7 @@ func GeneratePlayerClient(conn *websocket.Conn, bus EventBus.Bus) *Player {
 		conn:     conn,
 		send:     make(chan []byte, 256),
 		close:    make(chan struct{}),
-		bus:      bus,
+		// bus:      bus,
 	}
 }
 

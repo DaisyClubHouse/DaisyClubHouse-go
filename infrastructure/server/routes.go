@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
 	"DaisyClubHouse/infrastructure/server/handler"
@@ -16,20 +15,18 @@ func RegisterRoutes(r *gin.Engine, authMiddleware *jwt.GinJWTMiddleware, handler
 			"message": "success!",
 		})
 	})
-	// r.POST("/login", authMiddleware.LoginHandler)
 
-	r.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
-		claims := jwt.ExtractClaims(c)
-		log.Printf("NoRoute claims: %#v\n", claims)
-		c.JSON(404, gin.H{
-			"code":    "PAGE_NOT_FOUND",
-			"message": "Page not found",
-		})
-	})
+	// r.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
+	// 	claims := jwt.ExtractClaims(c)
+	// 	log.Printf("NoRoute claims: %#v\n", claims)
+	// 	c.JSON(404, gin.H{
+	// 		"code":    "PAGE_NOT_FOUND",
+	// 		"message": "Page not found",
+	// 	})
+	// })
 
 	api := r.Group("/api")
 	{
-		api.GET("/refresh_token", authMiddleware.RefreshHandler)
 		api.GET("/game/room/list", handler.GetRoomProfileListHandler())
 		api.POST("/game/room/create", handler.CreateRoom())
 	}

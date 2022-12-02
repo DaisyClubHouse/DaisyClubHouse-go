@@ -7,6 +7,7 @@ import (
 	"DaisyClubHouse/gobang/hub"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"golang.org/x/exp/slog"
 )
 
 var upgrader = websocket.Upgrader{
@@ -17,19 +18,17 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request, hub *hub.GameHub) {
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatalf("upgrade error: %v", err)
-		return
-	}
-
-	// 建立链接
-	hub.Connect(ws)
-}
-
 func WebsocketAdaptor(hub *hub.GameHub) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		wsHandler(c.Writer, c.Request, hub)
+		ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			log.Fatalf("upgrade error: %v", err)
+			return
+		}
+
+		slog.Info("receive a new connection", slog.Any("remote_addr", ws.RemoteAddr()))
+
+		// 建立链接
+		_ = hub.Connect(ws)
 	}
 }
